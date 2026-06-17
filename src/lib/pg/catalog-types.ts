@@ -120,8 +120,10 @@ export type BrowseTableResult = {
   pageSize: number
   sortColumn: string | null
   sortDirection: 'asc' | 'desc'
+  q: string | null
   filterColumn: string | null
   filterValue: string | null
+  filterOp: 'eq' | 'contains'
   relationLabels: Record<string, Record<string, string>>
   linkableRelations: Record<string, LinkableRelation>
 }

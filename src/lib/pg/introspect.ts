@@ -21,6 +21,10 @@ import {
   listColumnRelations,
 } from '#/lib/pg/foreign-keys'
 import { quoteIdentifier, quoteQualifiedName } from '#/lib/pg/identifiers'
+import {
+  buildRowBrowseFilterClause,
+  type RowBrowseFilterOp,
+} from '#/lib/pg/row-browse-filter'
 
 export async function listDatabases(client: pg.Client): Promise<DatabaseNode[]> {
   const result = await client.query<{ name: string }>(`
@@ -646,54 +650,26 @@ export async function resolveRelationLabelsForRows(
   return relationLabels
 }
 
-type RowFilter = {
-  column: string
-  value: string
-}
-
-function resolveRowFilter(
-  filterColumn: string | null | undefined,
-  filterValue: string | null | undefined,
-  allowedColumns: string[],
-): RowFilter | null {
-  const column = filterColumn?.trim()
-  const value = filterValue?.trim()
-
-  if (!column || !value || !allowedColumns.includes(column)) {
-    return null
-  }
-
-  return { column, value }
-}
-
-function buildRowFilterClause(filter: RowFilter | null) {
-  if (!filter) {
-    return { clause: '', values: [] as unknown[] }
-  }
-
-  return {
-    clause: `where ${quoteIdentifier(filter.column)}::text = $1`,
-    values: [filter.value],
-  }
-}
-
 export async function countTableRows(
   client: pg.Client,
   schema: string,
   table: string,
   options?: {
+    allowedColumns?: string[]
     filterColumn?: string | null
     filterValue?: string | null
-    allowedColumns?: string[]
+    filterOp?: RowBrowseFilterOp | null
+    q?: string | null
   },
 ): Promise<number> {
   const qualified = quoteQualifiedName(schema, table)
-  const filter = resolveRowFilter(
-    options?.filterColumn,
-    options?.filterValue,
-    options?.allowedColumns ?? [],
-  )
-  const { clause, values } = buildRowFilterClause(filter)
+  const { clause, values } = buildRowBrowseFilterClause({
+    allowedColumns: options?.allowedColumns ?? [],
+    filterColumn: options?.filterColumn,
+    filterValue: options?.filterValue,
+    filterOp: options?.filterOp,
+    q: options?.q,
+  })
   const result = await client.query<{ count: string }>(
     `select count(*)::text as count from ${qualified} ${clause}`,
     values,
@@ -714,16 +690,19 @@ export async function browseTableRows(
     allowedColumns: string[]
     filterColumn?: string | null
     filterValue?: string | null
+    filterOp?: RowBrowseFilterOp | null
+    q?: string | null
   },
 ): Promise<{ rows: Record<string, unknown>[]; columns: string[] }> {
   const qualified = quoteQualifiedName(schema, table)
   const offset = (options.page - 1) * options.pageSize
-  const filter = resolveRowFilter(
-    options.filterColumn,
-    options.filterValue,
-    options.allowedColumns,
-  )
-  const { clause, values: filterValues } = buildRowFilterClause(filter)
+  const { clause, values: filterValues } = buildRowBrowseFilterClause({
+    allowedColumns: options.allowedColumns,
+    filterColumn: options.filterColumn,
+    filterValue: options.filterValue,
+    filterOp: options.filterOp,
+    q: options.q,
+  })
 
   let orderBy = ''
   if (

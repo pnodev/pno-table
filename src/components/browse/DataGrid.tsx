@@ -1,10 +1,11 @@
 import { useRouter } from '@tanstack/react-router'
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { DataGridCell } from '#/components/browse/DataGridCell'
 import { EditableDataGridCell } from '#/components/browse/EditableDataGridCell'
 import { RowFormSheet } from '#/components/browse/RowFormSheet'
+import { TableBrowseFilters } from '#/components/browse/TableBrowseFilters'
 import { UrlLightbox } from '#/components/browse/UrlLightbox'
 import { Button } from '#/components/ui/button'
 import { FormAlert } from '#/components/ui/form-layout'
@@ -17,7 +18,7 @@ import {
   TableRow,
 } from '#/components/ui/table'
 import type { BrowseTableResult, ColumnInfo, ForeignKeyInfo } from '#/lib/pg/catalog-types'
-import type { TableBrowseSearch } from '#/lib/browse/search'
+import { tableBrowseSearch } from '#/lib/browse/search'
 import { formatRelationCellValue, totalPages } from '#/lib/pg/format-cell'
 import { removeTableRow } from '#/server/browse'
 
@@ -43,21 +44,6 @@ type RowDialogState =
   | null
 
 const ROW_SHEET_CLOSE_MS = 300
-
-function browseSearch(
-  browse: DataGridProps['browse'],
-  overrides: Partial<TableBrowseSearch> = {},
-): TableBrowseSearch {
-  return {
-    page: browse.page,
-    pageSize: browse.pageSize,
-    dir: browse.sortDirection,
-    sort: browse.sortColumn ?? undefined,
-    filterColumn: browse.filterColumn ?? undefined,
-    filterValue: browse.filterValue ?? undefined,
-    ...overrides,
-  }
-}
 
 export function DataGrid({
   connectionId,
@@ -136,7 +122,7 @@ export function DataGrid({
     void router.navigate({
       to: '/connect/$connectionId/$database/$schema/$table',
       params: { connectionId, database, schema, table },
-      search: browseSearch(browse, { page }),
+      search: tableBrowseSearch(browse, { page }),
     })
   }
 
@@ -149,22 +135,10 @@ export function DataGrid({
     void router.navigate({
       to: '/connect/$connectionId/$database/$schema/$table',
       params: { connectionId, database, schema, table },
-      search: browseSearch(browse, {
+      search: tableBrowseSearch(browse, {
         page: 1,
         sort: column,
         dir: nextDirection,
-      }),
-    })
-  }
-
-  const clearFilter = () => {
-    void router.navigate({
-      to: '/connect/$connectionId/$database/$schema/$table',
-      params: { connectionId, database, schema, table },
-      search: browseSearch(browse, {
-        page: 1,
-        filterColumn: undefined,
-        filterValue: undefined,
       }),
     })
   }
@@ -214,6 +188,15 @@ export function DataGrid({
 
   return (
     <div className="space-y-4">
+      <TableBrowseFilters
+        connectionId={connectionId}
+        database={database}
+        schema={schema}
+        table={table}
+        browse={browse}
+        columns={columns}
+      />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <p className="text-sm text-muted-foreground">
@@ -261,21 +244,6 @@ export function DataGrid({
       </div>
 
       {error ? <FormAlert>{error}</FormAlert> : null}
-
-      {browse.filterColumn && browse.filterValue ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 px-3 py-2">
-          <p className="text-sm text-muted-foreground">
-            Filtered to{' '}
-            <span className="font-mono text-foreground">
-              {browse.filterColumn} = {browse.filterValue}
-            </span>
-          </p>
-          <Button type="button" variant="outline" size="sm" onClick={clearFilter}>
-            <X className="size-3.5" />
-            Clear filter
-          </Button>
-        </div>
-      ) : null}
 
       {!readOnly && primaryKeyColumns.length === 0 ? (
         <FormAlert variant="warning">

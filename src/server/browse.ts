@@ -43,8 +43,10 @@ const browseSchema = tableSchema.extend({
   pageSize: z.coerce.number().int().min(1).max(500).default(50),
   sortColumn: z.string().nullable().default(null),
   sortDirection: z.enum(['asc', 'desc']).default('asc'),
+  q: z.string().nullable().optional(),
   filterColumn: z.string().nullable().optional(),
   filterValue: z.string().nullable().optional(),
+  filterOp: z.enum(['eq', 'contains']).optional().default('eq'),
 })
 
 const deleteRowSchema = tableSchema.extend({
@@ -125,12 +127,16 @@ export const fetchTableBrowse = createServerFn({ method: 'GET' })
       const allowedColumns = structure.columns.map((column) => column.name)
       const filterColumn = data.filterColumn ?? null
       const filterValue = data.filterValue ?? null
+      const filterOp = data.filterOp ?? 'eq'
+      const q = data.q?.trim() ? data.q.trim() : null
 
       const [totalRows, browse] = await Promise.all([
         countTableRows(client, data.schema, data.table, {
+          allowedColumns,
           filterColumn,
           filterValue,
-          allowedColumns,
+          filterOp,
+          q,
         }),
         browseTableRows(client, data.schema, data.table, {
           page: data.page,
@@ -140,6 +146,8 @@ export const fetchTableBrowse = createServerFn({ method: 'GET' })
           allowedColumns,
           filterColumn,
           filterValue,
+          filterOp,
+          q,
         }),
       ])
 
@@ -173,8 +181,10 @@ export const fetchTableBrowse = createServerFn({ method: 'GET' })
         pageSize: data.pageSize,
         sortColumn: data.sortColumn,
         sortDirection: data.sortDirection,
+        q,
         filterColumn,
         filterValue,
+        filterOp,
         relationLabels,
         linkableRelations,
       }

@@ -23,8 +23,10 @@ export const Route = createFileRoute(
           pageSize: search.pageSize,
           sortColumn: search.sort ?? null,
           sortDirection: search.dir,
+          q: search.q ?? null,
           filterColumn: search.filterColumn ?? null,
           filterValue: search.filterValue ?? null,
+          filterOp: search.filterOp ?? 'eq',
         },
       }),
       fetchTableStructure({
