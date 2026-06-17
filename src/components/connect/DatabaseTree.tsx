@@ -1,8 +1,9 @@
-import { Link } from '@tanstack/react-router'
 import { ChevronDown, ChevronRight, Eye, Table2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { ScrollArea } from '#/components/ui/scroll-area'
+import { FormAlert } from '#/components/ui/form-layout'
+import { SidebarLink } from '#/components/ui/nav-patterns'
 import type {
   DatabaseNode,
   RelationNode,
@@ -220,11 +221,7 @@ export function DatabaseTree({
             </p>
           ) : null}
 
-          {error ? (
-            <p className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-800">
-              {error}
-            </p>
-          ) : null}
+          {error ? <FormAlert className="text-xs">{error}</FormAlert> : null}
 
           {databases.map((database) => {
             const isDatabaseExpanded = expandedDatabases.has(database.name)
@@ -292,7 +289,7 @@ export function DatabaseTree({
                                   activeTable === relation.name
 
                                 return (
-                                  <Link
+                                  <SidebarLink
                                     key={relation.name}
                                     to="/connect/$connectionId/$database/$schema/$table"
                                     params={{
@@ -301,11 +298,7 @@ export function DatabaseTree({
                                       schema: schema.name,
                                       table: relation.name,
                                     }}
-                                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm no-underline ${
-                                      isActive
-                                        ? 'bg-brand-subtle font-medium text-brand shadow-sm ring-1 ring-brand/25'
-                                        : 'text-muted-foreground hover:bg-sidebar-accent hover:text-brand'
-                                    }`}
+                                    active={isActive}
                                   >
                                     {relation.kind === 'view' ? (
                                       <Eye className="size-3.5 shrink-0" />
@@ -315,7 +308,7 @@ export function DatabaseTree({
                                     <span className="truncate">
                                       {relation.name}
                                     </span>
-                                  </Link>
+                                  </SidebarLink>
                                 )
                               })}
                             </div>

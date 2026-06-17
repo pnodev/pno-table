@@ -10,6 +10,7 @@ import { useState } from 'react'
 
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
+import { FormAlert } from '#/components/ui/form-layout'
 import {
   Card,
   CardContent,
@@ -111,15 +112,9 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
 
       <CardContent className="space-y-2">
         {message ? (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-            {message}
-          </p>
+          <FormAlert variant="success">{message}</FormAlert>
         ) : null}
-        {error ? (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-            {error}
-          </p>
-        ) : null}
+        {error ? <FormAlert>{error}</FormAlert> : null}
       </CardContent>
 
       <CardFooter className="flex flex-wrap gap-2">

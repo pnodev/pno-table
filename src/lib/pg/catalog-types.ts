@@ -35,6 +35,42 @@ export type ForeignKeyInfo = {
   referencedColumn: string
 }
 
+export type ForeignKeyOption = {
+  value: string
+  label: string
+  values: Record<string, string>
+}
+
+export type RelationColumnMapping = {
+  column: string
+  referencedColumn: string
+}
+
+export type ColumnRelationSource = 'constraint' | 'inferred'
+
+export type ColumnRelation = {
+  source: ColumnRelationSource
+  name: string
+  column: string
+  columns: RelationColumnMapping[]
+  referencedSchema: string
+  referencedTable: string
+}
+
+export type ForeignKeyOptionsResult = {
+  options: ForeignKeyOption[]
+  labelColumn: string | null
+  referencedSchema: string
+  referencedTable: string
+  columns: RelationColumnMapping[]
+}
+
+export type LinkableRelation = {
+  referencedSchema: string
+  referencedTable: string
+  filterColumn: string
+}
+
 export type TableStructure = {
   columns: ColumnInfo[]
   indexes: IndexInfo[]
@@ -52,4 +88,8 @@ export type BrowseTableResult = {
   pageSize: number
   sortColumn: string | null
   sortDirection: 'asc' | 'desc'
+  filterColumn: string | null
+  filterValue: string | null
+  relationLabels: Record<string, Record<string, string>>
+  linkableRelations: Record<string, LinkableRelation>
 }

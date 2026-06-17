@@ -1,8 +1,12 @@
 import { useRouter } from '@tanstack/react-router'
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
+import { DataGridCell } from '#/components/browse/DataGridCell'
+import { RowFormSheet } from '#/components/browse/RowFormSheet'
+import { UrlLightbox } from '#/components/browse/UrlLightbox'
 import { Button } from '#/components/ui/button'
+import { FormAlert } from '#/components/ui/form-layout'
 import {
   Table,
   TableBody,
@@ -11,8 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table'
-import { formatCellValue, totalPages } from '#/lib/pg/format-cell'
-import type { BrowseTableResult } from '#/lib/pg/catalog-types'
+import type { BrowseTableResult, ColumnInfo, ForeignKeyInfo } from '#/lib/pg/catalog-types'
+import type { TableBrowseSearch } from '#/lib/browse/search'
+import { formatRelationCellValue, totalPages } from '#/lib/pg/format-cell'
 import { removeTableRow } from '#/server/browse'
 
 type DataGridProps = {
@@ -21,8 +26,36 @@ type DataGridProps = {
   schema: string
   table: string
   browse: BrowseTableResult
+  columns: ColumnInfo[]
+  foreignKeys: ForeignKeyInfo[]
   readOnly: boolean
   primaryKeyColumns: string[]
+}
+
+type RowDialogState =
+  | { mode: 'insert' }
+  | {
+      mode: 'edit'
+      row: Record<string, unknown>
+      primaryKey: Record<string, unknown>
+    }
+  | null
+
+const ROW_SHEET_CLOSE_MS = 300
+
+function browseSearch(
+  browse: DataGridProps['browse'],
+  overrides: Partial<TableBrowseSearch> = {},
+): TableBrowseSearch {
+  return {
+    page: browse.page,
+    pageSize: browse.pageSize,
+    dir: browse.sortDirection,
+    sort: browse.sortColumn ?? undefined,
+    filterColumn: browse.filterColumn ?? undefined,
+    filterValue: browse.filterValue ?? undefined,
+    ...overrides,
+  }
 }
 
 export function DataGrid({
@@ -31,25 +64,77 @@ export function DataGrid({
   schema,
   table,
   browse,
+  columns,
+  foreignKeys,
   readOnly,
   primaryKeyColumns,
 }: DataGridProps) {
   const router = useRouter()
   const [deletingKey, setDeletingKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [rowDialog, setRowDialog] = useState<RowDialogState>(null)
+  const [rowSheetOpen, setRowSheetOpen] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const rowSheetCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
+
+  useEffect(() => {
+    if (!rowDialog) {
+      return
+    }
+
+    setRowSheetOpen(true)
+
+    return () => {
+      setRowSheetOpen(false)
+    }
+  }, [rowDialog])
+
+  useEffect(() => {
+    return () => {
+      if (rowSheetCloseTimeoutRef.current) {
+        clearTimeout(rowSheetCloseTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const openRowDialog = (dialog: NonNullable<RowDialogState>) => {
+    if (rowSheetCloseTimeoutRef.current) {
+      clearTimeout(rowSheetCloseTimeoutRef.current)
+      rowSheetCloseTimeoutRef.current = null
+    }
+
+    setRowDialog(dialog)
+  }
+
+  const handleRowSheetOpenChange = (open: boolean) => {
+    setRowSheetOpen(open)
+
+    if (open) {
+      if (rowSheetCloseTimeoutRef.current) {
+        clearTimeout(rowSheetCloseTimeoutRef.current)
+        rowSheetCloseTimeoutRef.current = null
+      }
+      return
+    }
+
+    rowSheetCloseTimeoutRef.current = setTimeout(() => {
+      setRowDialog(null)
+      rowSheetCloseTimeoutRef.current = null
+    }, ROW_SHEET_CLOSE_MS)
+  }
 
   const pages = totalPages(browse.totalRows, browse.pageSize)
+  const canEditRows = !readOnly && primaryKeyColumns.length > 0
+  const canMutateRows = !readOnly
+  const showActions = canEditRows
 
   const navigatePage = (page: number) => {
     void router.navigate({
       to: '/connect/$connectionId/$database/$schema/$table',
       params: { connectionId, database, schema, table },
-      search: {
-        page,
-        pageSize: browse.pageSize,
-        sort: browse.sortColumn ?? undefined,
-        dir: browse.sortDirection,
-      },
+      search: browseSearch(browse, { page }),
     })
   }
 
@@ -62,13 +147,28 @@ export function DataGrid({
     void router.navigate({
       to: '/connect/$connectionId/$database/$schema/$table',
       params: { connectionId, database, schema, table },
-      search: {
+      search: browseSearch(browse, {
         page: 1,
-        pageSize: browse.pageSize,
         sort: column,
         dir: nextDirection,
-      },
+      }),
     })
+  }
+
+  const clearFilter = () => {
+    void router.navigate({
+      to: '/connect/$connectionId/$database/$schema/$table',
+      params: { connectionId, database, schema, table },
+      search: browseSearch(browse, {
+        page: 1,
+        filterColumn: undefined,
+        filterValue: undefined,
+      }),
+    })
+  }
+
+  const refresh = async () => {
+    await router.invalidate()
   }
 
   const handleDelete = async (row: Record<string, unknown>) => {
@@ -98,7 +198,7 @@ export function DataGrid({
           primaryKey,
         },
       })
-      await router.invalidate()
+      await refresh()
     } catch (deleteError) {
       setError(
         deleteError instanceof Error
@@ -113,13 +213,25 @@ export function DataGrid({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {browse.totalRows.toLocaleString()} row
-          {browse.totalRows === 1 ? '' : 's'}
-          {browse.sortColumn
-            ? ` · sorted by ${browse.sortColumn} ${browse.sortDirection}`
-            : ''}
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            {browse.totalRows.toLocaleString()} row
+            {browse.totalRows === 1 ? '' : 's'}
+            {browse.sortColumn
+              ? ` · sorted by ${browse.sortColumn} ${browse.sortDirection}`
+              : ''}
+          </p>
+          {canMutateRows ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => openRowDialog({ mode: 'insert' })}
+            >
+              <Plus className="size-4" />
+              Add row
+            </Button>
+          ) : null}
+        </div>
 
         <div className="flex items-center gap-2">
           <Button
@@ -146,10 +258,28 @@ export function DataGrid({
         </div>
       </div>
 
-      {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error}
-        </p>
+      {error ? <FormAlert>{error}</FormAlert> : null}
+
+      {browse.filterColumn && browse.filterValue ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 px-3 py-2">
+          <p className="text-sm text-muted-foreground">
+            Filtered to{' '}
+            <span className="font-mono text-foreground">
+              {browse.filterColumn} = {browse.filterValue}
+            </span>
+          </p>
+          <Button type="button" variant="outline" size="sm" onClick={clearFilter}>
+            <X className="size-3.5" />
+            Clear filter
+          </Button>
+        </div>
+      ) : null}
+
+      {!readOnly && primaryKeyColumns.length === 0 ? (
+        <FormAlert variant="warning">
+          This table has no primary key. You can insert rows, but editing and
+          deleting existing rows is disabled.
+        </FormAlert>
       ) : null}
 
       <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -177,8 +307,8 @@ export function DataGrid({
                   </button>
                 </TableHead>
               ))}
-              {!readOnly && primaryKeyColumns.length > 0 ? (
-                <TableHead className="w-20">Actions</TableHead>
+              {showActions ? (
+                <TableHead className="w-24">Actions</TableHead>
               ) : null}
             </TableRow>
           </TableHeader>
@@ -187,8 +317,7 @@ export function DataGrid({
               <TableRow>
                 <TableCell
                   colSpan={
-                    browse.columns.length +
-                    (!readOnly && primaryKeyColumns.length > 0 ? 1 : 0)
+                    browse.columns.length + (showActions ? 1 : 0)
                   }
                   className="text-muted-foreground h-24 text-center"
                 >
@@ -204,26 +333,61 @@ export function DataGrid({
 
                 return (
                   <TableRow key={rowKey}>
-                    {browse.columns.map((column) => (
-                      <TableCell
-                        key={column.name}
-                        className="max-w-xs truncate font-mono text-xs"
-                        title={formatCellValue(row[column.name])}
-                      >
-                        {formatCellValue(row[column.name])}
-                      </TableCell>
-                    ))}
-                    {!readOnly && primaryKeyColumns.length > 0 ? (
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-xs"
-                          disabled={deletingKey === rowKey}
-                          onClick={() => void handleDelete(row)}
+                    {browse.columns.map((column) => {
+                      const cell = formatRelationCellValue(
+                        row[column.name],
+                        browse.relationLabels[column.name],
+                      )
+
+                      return (
+                        <TableCell
+                          key={column.name}
+                          className="max-w-xs truncate text-xs"
+                          title={cell.title}
                         >
-                          <Trash2 className="size-3.5" />
-                        </Button>
+                          <DataGridCell
+                            connectionId={connectionId}
+                            database={database}
+                            pageSize={browse.pageSize}
+                            rawValue={row[column.name]}
+                            display={cell.display}
+                            title={cell.title}
+                            hasRelationLabel={Boolean(
+                              browse.relationLabels[column.name],
+                            )}
+                            linkable={browse.linkableRelations[column.name]}
+                            onPreviewUrl={setPreviewUrl}
+                          />
+                        </TableCell>
+                      )
+                    })}
+                    {showActions ? (
+                      <TableCell>
+                        <div className="flex items-center gap-0.5">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={() =>
+                              openRowDialog({
+                                mode: 'edit',
+                                row,
+                                primaryKey,
+                              })
+                            }
+                          >
+                            <Pencil className="size-3.5" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            disabled={deletingKey === rowKey}
+                            onClick={() => void handleDelete(row)}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     ) : null}
                   </TableRow>
@@ -233,6 +397,34 @@ export function DataGrid({
           </TableBody>
         </Table>
       </div>
+
+      {rowDialog ? (
+        <RowFormSheet
+          open={rowSheetOpen}
+          mode={rowDialog.mode}
+          connectionId={connectionId}
+          database={database}
+          schema={schema}
+          table={table}
+          columns={columns}
+          foreignKeys={foreignKeys}
+          initialRow={rowDialog.mode === 'edit' ? rowDialog.row : undefined}
+          primaryKey={
+            rowDialog.mode === 'edit' ? rowDialog.primaryKey : undefined
+          }
+          onOpenChange={handleRowSheetOpenChange}
+          onSaved={refresh}
+        />
+      ) : null}
+
+      <UrlLightbox
+        url={previewUrl}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPreviewUrl(null)
+          }
+        }}
+      />
     </div>
   )
 }

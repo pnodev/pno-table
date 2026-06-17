@@ -23,6 +23,8 @@ export const Route = createFileRoute(
           pageSize: search.pageSize,
           sortColumn: search.sort ?? null,
           sortDirection: search.dir,
+          filterColumn: search.filterColumn ?? null,
+          filterValue: search.filterValue ?? null,
         },
       }),
       fetchTableStructure({
@@ -68,6 +70,8 @@ function TableBrowsePage() {
           schema={params.schema}
           table={params.table}
           browse={browse}
+          columns={structure.columns}
+          foreignKeys={structure.foreignKeys}
           readOnly={connection.readOnly}
           primaryKeyColumns={structure.primaryKeyColumns}
         />

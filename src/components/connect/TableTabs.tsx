@@ -1,4 +1,8 @@
-import { Link } from '@tanstack/react-router'
+import {
+  SegmentTab,
+  SegmentTabs,
+  SegmentTabsBar,
+} from '#/components/ui/nav-patterns'
 
 type TableTabsProps = {
   connectionId: string
@@ -15,31 +19,24 @@ export function TableTabs({
   table,
   active,
 }: TableTabsProps) {
-  const tabClass = (isActive: boolean) =>
-    `rounded-md px-3 py-1.5 text-sm font-medium no-underline transition-colors ${
-      isActive
-        ? 'bg-brand-subtle text-brand shadow-sm ring-1 ring-brand/25'
-        : 'text-muted-foreground hover:bg-brand-subtle/60 hover:text-brand'
-    }`
-
   return (
-    <div className="border-b border-border bg-muted/40 px-4 py-2.5">
-      <div className="inline-flex gap-1 rounded-lg border border-border bg-muted/60 p-1">
-        <Link
+    <SegmentTabsBar>
+      <SegmentTabs>
+        <SegmentTab
           to="/connect/$connectionId/$database/$schema/$table"
           params={{ connectionId, database, schema, table }}
-          className={tabClass(active === 'browse')}
+          active={active === 'browse'}
         >
           Browse
-        </Link>
-        <Link
+        </SegmentTab>
+        <SegmentTab
           to="/connect/$connectionId/$database/$schema/$table/structure"
           params={{ connectionId, database, schema, table }}
-          className={tabClass(active === 'structure')}
+          active={active === 'structure'}
         >
           Structure
-        </Link>
-      </div>
-    </div>
+        </SegmentTab>
+      </SegmentTabs>
+    </SegmentTabsBar>
   )
 }

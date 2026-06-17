@@ -21,7 +21,7 @@ function EditConnectionPage() {
 
   return (
     <main className="page-wrap px-4 pb-10 pt-10">
-      <section className="island-shell mx-auto max-w-3xl rounded-xl p-6 sm:p-8">
+      <section className="content-panel rounded-xl p-6 sm:p-8">
         <div className="mb-8 space-y-2">
           <p className="island-kicker">Connections</p>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">

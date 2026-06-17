@@ -3,6 +3,7 @@ import { LoaderCircle, PlugZap } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '#/components/ui/button'
+import { FormAlert } from '#/components/ui/form-layout'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Switch } from '#/components/ui/switch'
@@ -334,16 +335,10 @@ export function ConnectionForm({ mode, initialValues }: ConnectionFormProps) {
       </div>
 
       {testMessage ? (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          {testMessage}
-        </p>
+        <FormAlert variant="success">{testMessage}</FormAlert>
       ) : null}
 
-      {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error}
-        </p>
-      ) : null}
+      {error ? <FormAlert>{error}</FormAlert> : null}
 
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={saving || testing}>

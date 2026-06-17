@@ -23,7 +23,7 @@ function ConnectionsPage() {
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
             A phpMyAdmin-inspired Postgres admin with a modern workflow. Save
-            connections here, then browse schemas and tables in the next phase.
+            connections, then browse, edit, and manage table data.
           </p>
         </div>
         <Button asChild size="lg">

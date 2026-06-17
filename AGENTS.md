@@ -14,6 +14,30 @@ When working on UI:
 - Do **not** reintroduce `ThemeToggle`, `prefers-color-scheme` switching, or a `.dark` class until dark mode is explicitly requested.
 - The root document sets `class="light"` and `color-scheme: light` in `src/routes/__root.tsx`.
 
+## UI composition (standardize, do not one-off)
+
+Extend shared primitives in `src/components/ui/` and pattern classes in `src/styles.css`. **Do not** bolt sizing, spacing, or layout onto shadcn components with ad-hoc `className` overrides in feature code.
+
+**Sheets** (`src/components/ui/sheet.tsx`):
+- Use `SheetContent` `size` prop: `sm` | `md` | `lg` | `wide` (widths from `--sheet-width-*` in `styles.css`).
+- Use `padding="none"` plus `SheetForm`, `SheetFormHeader`, `SheetFormBody`, `SheetFormFooter` for form sheets.
+- Row editing uses `size="wide"` — do not re-specify width in routes or browse components.
+
+**Forms** (`src/components/ui/form-layout.tsx`):
+- `FormGrid` / `FormGridItem` (`span="wide"`) for multi-column forms.
+- `Field`, `FieldLabel`, `FieldHint`, `FieldNullToggle`, `NativeSelect`, `FormAlert` (`error` | `warning` | `success`).
+- `field-mono` class for monospace data entry fields.
+
+**Navigation patterns** (`src/components/ui/nav-patterns.tsx`):
+- `SegmentTabsBar`, `SegmentTabs`, `SegmentTab` for in-page tab bars.
+- `SidebarLink` for sidebar tree links.
+
+**Page layout** (`src/styles.css`):
+- `content-panel` for centered form pages (uses `--content-width-form`).
+- `page-wrap` for main content width.
+
+When a pattern is missing, add a variant or primitive first, then use it from feature components.
+
 <!-- intent-skills:start -->
 # Skill mappings - load `use` with `npx @tanstack/intent@latest load <use>`.
 skills:
