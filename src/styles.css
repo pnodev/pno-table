@@ -290,6 +290,54 @@ pre code {
   line-height: 1rem;
 }
 
+.editable-cell {
+  cursor: cell;
+}
+
+.editable-cell:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--brand) 35%, transparent);
+}
+
+.inline-cell-editor .inline-cell-input {
+  height: 1.75rem;
+  min-height: 0;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  box-shadow: none;
+}
+
+.inline-cell-editor textarea.inline-cell-input {
+  height: auto;
+  min-height: 4rem;
+  padding: 0.375rem;
+  resize: vertical;
+}
+
+.inline-cell-editor .native-select.inline-cell-input {
+  height: 1.75rem;
+  padding-inline: 0.375rem;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+}
+
+.inline-cell-editor {
+  position: relative;
+}
+
+.inline-cell-saving {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--radius) - 4px);
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  padding: 0.125rem;
+  pointer-events: none;
+}
+
 .native-select {
   height: 2.25rem;
   width: 100%;

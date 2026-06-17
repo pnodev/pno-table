@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { DataGridCell } from '#/components/browse/DataGridCell'
+import { EditableDataGridCell } from '#/components/browse/EditableDataGridCell'
 import { RowFormSheet } from '#/components/browse/RowFormSheet'
 import { UrlLightbox } from '#/components/browse/UrlLightbox'
 import { Button } from '#/components/ui/button'
@@ -129,6 +130,7 @@ export function DataGrid({
   const canEditRows = !readOnly && primaryKeyColumns.length > 0
   const canMutateRows = !readOnly
   const showActions = canEditRows
+  const columnByName = new Map(columns.map((column) => [column.name, column]))
 
   const navigatePage = (page: number) => {
     void router.navigate({
@@ -338,6 +340,33 @@ export function DataGrid({
                         row[column.name],
                         browse.relationLabels[column.name],
                       )
+                      const columnInfo = columnByName.get(column.name)
+
+                      if (canEditRows && columnInfo) {
+                        return (
+                          <EditableDataGridCell
+                            key={column.name}
+                            column={columnInfo}
+                            editable={!columnInfo.isPrimaryKey}
+                            row={row}
+                            primaryKey={primaryKey}
+                            connectionId={connectionId}
+                            database={database}
+                            schema={schema}
+                            table={table}
+                            pageSize={browse.pageSize}
+                            rawValue={row[column.name]}
+                            display={cell.display}
+                            title={cell.title}
+                            hasRelationLabel={Boolean(
+                              browse.relationLabels[column.name],
+                            )}
+                            linkable={browse.linkableRelations[column.name]}
+                            onPreviewUrl={setPreviewUrl}
+                            onSaved={refresh}
+                          />
+                        )
+                      }
 
                       return (
                         <TableCell
