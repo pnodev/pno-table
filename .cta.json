@@ -1,0 +1,27 @@
+{
+  "projectName": "pno-table",
+  "mode": "file-router",
+  "typescript": true,
+  "tailwind": true,
+  "packageManager": "npm",
+  "git": true,
+  "install": true,
+  "intent": true,
+  "addOnOptions": {
+    "drizzle": {
+      "database": "postgresql"
+    }
+  },
+  "includeExamples": true,
+  "envVarValues": {},
+  "routerOnly": false,
+  "version": 1,
+  "framework": "react",
+  "chosenAddOns": [
+    "tanstack-query",
+    "drizzle",
+    "shadcn",
+    "t3env",
+    "nitro"
+  ]
+}
