@@ -19,3 +19,11 @@ export function quoteIdentifier(identifier: string): string {
 export function quoteQualifiedName(schema: string, name: string): string {
   return `${quoteIdentifier(schema)}.${quoteIdentifier(name)}`
 }
+
+export function quoteStringLiteral(value: string): string {
+  if (value.includes('\0')) {
+    throw new Error('Invalid SQL string literal')
+  }
+
+  return `'${value.replaceAll("'", "''")}'`
+}

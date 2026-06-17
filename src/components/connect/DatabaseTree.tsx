@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ScrollArea } from '#/components/ui/scroll-area'
 import { FormAlert } from '#/components/ui/form-layout'
 import { SidebarLink } from '#/components/ui/nav-patterns'
+import { formatAppError } from '#/lib/format-error'
 import type {
   DatabaseNode,
   RelationNode,
@@ -46,9 +47,14 @@ export function DatabaseTree({
   const [loadingSchemas, setLoadingSchemas] = useState<Set<string>>(new Set())
   const [loadingRelations, setLoadingRelations] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
+  const [databaseErrors, setDatabaseErrors] = useState<Record<string, string>>(
+    {},
+  )
+  const [schemaErrors, setSchemaErrors] = useState<Record<string, string>>({})
 
   const schemasCacheRef = useRef<SchemaCache>({})
   const relationsCacheRef = useRef<RelationCache>({})
+  const autoExpandedDatabaseRef = useRef<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -56,6 +62,15 @@ export function DatabaseTree({
     const load = async () => {
       setLoadingDatabases(true)
       setError(null)
+      setDatabaseErrors({})
+      setSchemaErrors({})
+      schemasCacheRef.current = {}
+      relationsCacheRef.current = {}
+      autoExpandedDatabaseRef.current = null
+      setSchemasByDatabase({})
+      setRelationsBySchema({})
+      setExpandedDatabases(new Set())
+      setExpandedSchemas(new Set())
 
       try {
         const rows = await fetchDatabases({ data: { connectionId } })
@@ -63,11 +78,7 @@ export function DatabaseTree({
         setDatabases(rows)
       } catch (loadError) {
         if (!cancelled) {
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : 'Failed to load databases',
-          )
+          setError(formatAppError(loadError, 'Failed to load databases'))
         }
       } finally {
         if (!cancelled) {
@@ -97,12 +108,19 @@ export function DatabaseTree({
         [database]: rows,
       }
       setSchemasByDatabase((current) => ({ ...current, [database]: rows }))
+      setDatabaseErrors((current) => {
+        const next = { ...current }
+        delete next[database]
+        return next
+      })
     } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Failed to load schemas',
-      )
+      const message = formatAppError(loadError, 'Failed to load schemas')
+      schemasCacheRef.current = {
+        ...schemasCacheRef.current,
+        [database]: [],
+      }
+      setSchemasByDatabase((current) => ({ ...current, [database]: [] }))
+      setDatabaseErrors((current) => ({ ...current, [database]: message }))
     } finally {
       setLoadingSchemas((current) => {
         const next = new Set(current)
@@ -130,12 +148,19 @@ export function DatabaseTree({
         [key]: rows,
       }
       setRelationsBySchema((current) => ({ ...current, [key]: rows }))
+      setSchemaErrors((current) => {
+        const next = { ...current }
+        delete next[key]
+        return next
+      })
     } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Failed to load tables',
-      )
+      const message = formatAppError(loadError, 'Failed to load tables')
+      relationsCacheRef.current = {
+        ...relationsCacheRef.current,
+        [key]: [],
+      }
+      setRelationsBySchema((current) => ({ ...current, [key]: [] }))
+      setSchemaErrors((current) => ({ ...current, [key]: message }))
     } finally {
       setLoadingRelations((current) => {
         const next = new Set(current)
@@ -175,6 +200,21 @@ export function DatabaseTree({
       cancelled = true
     }
   }, [connectionId, activeDatabase, activeSchema])
+
+  useEffect(() => {
+    if (loadingDatabases || databases.length !== 1) {
+      return
+    }
+
+    const database = databases[0]?.name
+    if (!database || autoExpandedDatabaseRef.current === database) {
+      return
+    }
+
+    autoExpandedDatabaseRef.current = database
+    setExpandedDatabases(new Set([database]))
+    void ensureSchemas(database)
+  }, [databases, loadingDatabases])
 
   const toggleDatabase = async (database: string) => {
     const next = new Set(expandedDatabases)
@@ -223,10 +263,17 @@ export function DatabaseTree({
 
           {error ? <FormAlert className="text-xs">{error}</FormAlert> : null}
 
+          {!loadingDatabases && databases.length === 0 && !error ? (
+            <p className="px-2 py-1 text-xs text-muted-foreground">
+              No accessible databases for this user.
+            </p>
+          ) : null}
+
           {databases.map((database) => {
             const isDatabaseExpanded = expandedDatabases.has(database.name)
             const schemas = schemasByDatabase[database.name] ?? []
             const isDatabaseLoading = loadingSchemas.has(database.name)
+            const databaseError = databaseErrors[database.name]
 
             return (
               <div key={database.name}>
@@ -251,11 +298,28 @@ export function DatabaseTree({
                       </p>
                     ) : null}
 
+                    {databaseError ? (
+                      <p className="px-2 py-1 text-xs text-destructive">
+                        {databaseError}
+                      </p>
+                    ) : null}
+
+                    {!isDatabaseLoading &&
+                    !databaseError &&
+                    schemas.length === 0 ? (
+                      <p className="px-2 py-1 text-xs text-muted-foreground">
+                        No accessible schemas.
+                      </p>
+                    ) : null}
+
                     {schemas.map((schema) => {
                       const schemaKey = cacheKey(database.name, schema.name)
                       const isSchemaExpanded = expandedSchemas.has(schemaKey)
                       const relations = relationsBySchema[schemaKey] ?? []
                       const isRelationsLoading = loadingRelations.has(schemaKey)
+                      const schemaError = schemaErrors[schemaKey]
+                      const relationsLoaded =
+                        relationsCacheRef.current[schemaKey] !== undefined
 
                       return (
                         <div key={schema.name}>
@@ -279,6 +343,21 @@ export function DatabaseTree({
                               {isRelationsLoading ? (
                                 <p className="px-2 py-1 text-xs text-muted-foreground">
                                   Loading tables...
+                                </p>
+                              ) : null}
+
+                              {schemaError ? (
+                                <p className="px-2 py-1 text-xs text-destructive">
+                                  {schemaError}
+                                </p>
+                              ) : null}
+
+                              {!isRelationsLoading &&
+                              !schemaError &&
+                              relationsLoaded &&
+                              relations.length === 0 ? (
+                                <p className="px-2 py-1 text-xs text-muted-foreground">
+                                  No accessible tables.
                                 </p>
                               ) : null}
 

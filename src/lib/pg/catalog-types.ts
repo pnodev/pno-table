@@ -2,6 +2,38 @@ export type DatabaseNode = {
   name: string
 }
 
+export type DatabaseDetails = {
+  name: string
+  owner: string
+  encoding: string
+  collation: string
+  sizeBytes: number
+  isTemplate: boolean
+  allowConnections: boolean
+}
+
+export type RoleInfo = {
+  name: string
+  oid: number
+  isSuperuser: boolean
+  canLogin: boolean
+  canCreateDb: boolean
+  canCreateRole: boolean
+  isReplication: boolean
+  bypassRls: boolean
+  connectionLimit: number
+  validUntil: string | null
+  memberOf: string[]
+}
+
+export type RoleDatabaseAccess = {
+  database: string
+  canConnect: boolean
+  canCreate: boolean
+  publicCanConnect: boolean
+  effectiveCanConnect: boolean
+}
+
 export type SchemaNode = {
   name: string
 }

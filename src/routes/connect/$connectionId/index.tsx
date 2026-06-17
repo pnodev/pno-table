@@ -20,8 +20,9 @@ function ConnectHomePage() {
           Connected to {connection.name}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Expand a database in the sidebar, then pick a schema and table to
-          browse data or view structure.
+          Browse table data, manage databases, or configure users and roles from
+          the tabs above. Expand a database in the sidebar to pick a schema and
+          table.
         </p>
       </div>
     </div>

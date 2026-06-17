@@ -89,6 +89,7 @@ export const fetchDatabases = createServerFn({ method: 'GET' })
       data.connectionId,
       resolved.profile.defaultDatabase,
       async (client) => listDatabases(client),
+      { allowFallback: true },
     )
   })
 

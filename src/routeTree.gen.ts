@@ -14,6 +14,8 @@ import { Route as ConnectionsNewRouteImport } from './routes/connections/new'
 import { Route as ConnectConnectionIdRouteRouteImport } from './routes/connect/$connectionId/route'
 import { Route as ConnectConnectionIdIndexRouteImport } from './routes/connect/$connectionId/index'
 import { Route as ConnectionsConnectionIdEditRouteImport } from './routes/connections/$connectionId/edit'
+import { Route as ConnectConnectionIdUsersRouteImport } from './routes/connect/$connectionId/users'
+import { Route as ConnectConnectionIdDatabasesRouteImport } from './routes/connect/$connectionId/databases'
 import { Route as ConnectConnectionIdDatabaseSchemaTableIndexRouteImport } from './routes/connect/$connectionId/$database/$schema/$table/index'
 import { Route as ConnectConnectionIdDatabaseSchemaTableStructureRouteImport } from './routes/connect/$connectionId/$database/$schema/$table/structure'
 
@@ -45,6 +47,18 @@ const ConnectionsConnectionIdEditRoute =
     path: '/connections/$connectionId/edit',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ConnectConnectionIdUsersRoute =
+  ConnectConnectionIdUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => ConnectConnectionIdRouteRoute,
+  } as any)
+const ConnectConnectionIdDatabasesRoute =
+  ConnectConnectionIdDatabasesRouteImport.update({
+    id: '/databases',
+    path: '/databases',
+    getParentRoute: () => ConnectConnectionIdRouteRoute,
+  } as any)
 const ConnectConnectionIdDatabaseSchemaTableIndexRoute =
   ConnectConnectionIdDatabaseSchemaTableIndexRouteImport.update({
     id: '/$database/$schema/$table/',
@@ -62,6 +76,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/connect/$connectionId': typeof ConnectConnectionIdRouteRouteWithChildren
   '/connections/new': typeof ConnectionsNewRoute
+  '/connect/$connectionId/databases': typeof ConnectConnectionIdDatabasesRoute
+  '/connect/$connectionId/users': typeof ConnectConnectionIdUsersRoute
   '/connections/$connectionId/edit': typeof ConnectionsConnectionIdEditRoute
   '/connect/$connectionId/': typeof ConnectConnectionIdIndexRoute
   '/connect/$connectionId/$database/$schema/$table/structure': typeof ConnectConnectionIdDatabaseSchemaTableStructureRoute
@@ -70,6 +86,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/connections/new': typeof ConnectionsNewRoute
+  '/connect/$connectionId/databases': typeof ConnectConnectionIdDatabasesRoute
+  '/connect/$connectionId/users': typeof ConnectConnectionIdUsersRoute
   '/connections/$connectionId/edit': typeof ConnectionsConnectionIdEditRoute
   '/connect/$connectionId': typeof ConnectConnectionIdIndexRoute
   '/connect/$connectionId/$database/$schema/$table/structure': typeof ConnectConnectionIdDatabaseSchemaTableStructureRoute
@@ -80,6 +98,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/connect/$connectionId': typeof ConnectConnectionIdRouteRouteWithChildren
   '/connections/new': typeof ConnectionsNewRoute
+  '/connect/$connectionId/databases': typeof ConnectConnectionIdDatabasesRoute
+  '/connect/$connectionId/users': typeof ConnectConnectionIdUsersRoute
   '/connections/$connectionId/edit': typeof ConnectionsConnectionIdEditRoute
   '/connect/$connectionId/': typeof ConnectConnectionIdIndexRoute
   '/connect/$connectionId/$database/$schema/$table/structure': typeof ConnectConnectionIdDatabaseSchemaTableStructureRoute
@@ -91,6 +111,8 @@ export interface FileRouteTypes {
     | '/'
     | '/connect/$connectionId'
     | '/connections/new'
+    | '/connect/$connectionId/databases'
+    | '/connect/$connectionId/users'
     | '/connections/$connectionId/edit'
     | '/connect/$connectionId/'
     | '/connect/$connectionId/$database/$schema/$table/structure'
@@ -99,6 +121,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/connections/new'
+    | '/connect/$connectionId/databases'
+    | '/connect/$connectionId/users'
     | '/connections/$connectionId/edit'
     | '/connect/$connectionId'
     | '/connect/$connectionId/$database/$schema/$table/structure'
@@ -108,6 +132,8 @@ export interface FileRouteTypes {
     | '/'
     | '/connect/$connectionId'
     | '/connections/new'
+    | '/connect/$connectionId/databases'
+    | '/connect/$connectionId/users'
     | '/connections/$connectionId/edit'
     | '/connect/$connectionId/'
     | '/connect/$connectionId/$database/$schema/$table/structure'
@@ -158,6 +184,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConnectionsConnectionIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/connect/$connectionId/users': {
+      id: '/connect/$connectionId/users'
+      path: '/users'
+      fullPath: '/connect/$connectionId/users'
+      preLoaderRoute: typeof ConnectConnectionIdUsersRouteImport
+      parentRoute: typeof ConnectConnectionIdRouteRoute
+    }
+    '/connect/$connectionId/databases': {
+      id: '/connect/$connectionId/databases'
+      path: '/databases'
+      fullPath: '/connect/$connectionId/databases'
+      preLoaderRoute: typeof ConnectConnectionIdDatabasesRouteImport
+      parentRoute: typeof ConnectConnectionIdRouteRoute
+    }
     '/connect/$connectionId/$database/$schema/$table/': {
       id: '/connect/$connectionId/$database/$schema/$table/'
       path: '/$database/$schema/$table'
@@ -176,6 +216,8 @@ declare module '@tanstack/react-router' {
 }
 
 interface ConnectConnectionIdRouteRouteChildren {
+  ConnectConnectionIdDatabasesRoute: typeof ConnectConnectionIdDatabasesRoute
+  ConnectConnectionIdUsersRoute: typeof ConnectConnectionIdUsersRoute
   ConnectConnectionIdIndexRoute: typeof ConnectConnectionIdIndexRoute
   ConnectConnectionIdDatabaseSchemaTableStructureRoute: typeof ConnectConnectionIdDatabaseSchemaTableStructureRoute
   ConnectConnectionIdDatabaseSchemaTableIndexRoute: typeof ConnectConnectionIdDatabaseSchemaTableIndexRoute
@@ -183,6 +225,8 @@ interface ConnectConnectionIdRouteRouteChildren {
 
 const ConnectConnectionIdRouteRouteChildren: ConnectConnectionIdRouteRouteChildren =
   {
+    ConnectConnectionIdDatabasesRoute: ConnectConnectionIdDatabasesRoute,
+    ConnectConnectionIdUsersRoute: ConnectConnectionIdUsersRoute,
     ConnectConnectionIdIndexRoute: ConnectConnectionIdIndexRoute,
     ConnectConnectionIdDatabaseSchemaTableStructureRoute:
       ConnectConnectionIdDatabaseSchemaTableStructureRoute,

@@ -24,11 +24,23 @@ import { quoteIdentifier, quoteQualifiedName } from '#/lib/pg/identifiers'
 
 export async function listDatabases(client: pg.Client): Promise<DatabaseNode[]> {
   const result = await client.query<{ name: string }>(`
-    select datname as name
-    from pg_catalog.pg_database
-    where datallowconn
-      and not datistemplate
-    order by datname
+    select d.datname as name
+    from pg_catalog.pg_database d
+    join pg_catalog.pg_roles session_role
+      on session_role.rolname = current_user
+    where d.datallowconn
+      and not d.datistemplate
+      and (
+        session_role.rolsuper
+        or exists (
+          select 1
+          from aclexplode(coalesce(d.datacl, acldefault('d', d.datdba))) as acl
+          join pg_catalog.pg_roles grantee on grantee.oid = acl.grantee
+          where grantee.rolname = current_user
+            and acl.privilege_type = 'CONNECT'
+        )
+      )
+    order by d.datname
   `)
 
   return result.rows
@@ -36,18 +48,17 @@ export async function listDatabases(client: pg.Client): Promise<DatabaseNode[]> 
 
 export async function listSchemas(
   client: pg.Client,
-  database: string,
+  _database: string,
 ): Promise<SchemaNode[]> {
   const result = await client.query<{ name: string }>(
     `
-      select schema_name as name
-      from information_schema.schemata
-      where catalog_name = $1
-        and schema_name not like 'pg\\_%' escape '\\'
-        and schema_name <> 'information_schema'
-      order by schema_name
+      select n.nspname as name
+      from pg_catalog.pg_namespace n
+      where pg_catalog.has_schema_privilege(n.oid, 'USAGE')
+        and n.nspname not like 'pg\\_%' escape '\\'
+        and n.nspname <> 'information_schema'
+      order by n.nspname
     `,
-    [database],
   )
 
   return result.rows
@@ -60,15 +71,20 @@ export async function listRelations(
   const result = await client.query<{ name: string; kind: 'table' | 'view' }>(
     `
       select
-        table_name as name,
-        case table_type
-          when 'VIEW' then 'view'
+        c.relname as name,
+        case c.relkind
+          when 'v' then 'view'
           else 'table'
         end as kind
-      from information_schema.tables
-      where table_schema = $1
-        and table_type in ('BASE TABLE', 'VIEW')
-      order by table_name
+      from pg_catalog.pg_class c
+      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = $1
+        and c.relkind in ('r', 'v', 'p', 'f')
+        and (
+          pg_catalog.has_table_privilege(c.oid, 'SELECT')
+          or pg_catalog.has_any_column_privilege(c.oid, 'SELECT')
+        )
+      order by c.relname
     `,
     [schema],
   )
@@ -86,47 +102,63 @@ export async function getTableStructure(
     data_type: string
     is_nullable: string
     column_default: string | null
-    is_primary_key: boolean
-    is_foreign_key: boolean
   }>(
     `
       select
         c.column_name as name,
         c.data_type as data_type,
         c.is_nullable,
-        c.column_default,
-        coalesce(pk.is_primary_key, false) as is_primary_key,
-        coalesce(fk.is_foreign_key, false) as is_foreign_key
+        c.column_default
       from information_schema.columns c
-      left join lateral (
-        select true as is_primary_key
-        from information_schema.table_constraints tc
-        join information_schema.key_column_usage kcu
-          on tc.constraint_name = kcu.constraint_name
-         and tc.table_schema = kcu.table_schema
-        where tc.constraint_type = 'PRIMARY KEY'
-          and tc.table_schema = c.table_schema
-          and tc.table_name = c.table_name
-          and kcu.column_name = c.column_name
-        limit 1
-      ) pk on true
-      left join lateral (
-        select true as is_foreign_key
-        from information_schema.table_constraints tc
-        join information_schema.key_column_usage kcu
-          on tc.constraint_name = kcu.constraint_name
-         and tc.table_schema = kcu.table_schema
-        where tc.constraint_type = 'FOREIGN KEY'
-          and tc.table_schema = c.table_schema
-          and tc.table_name = c.table_name
-          and kcu.column_name = c.column_name
-        limit 1
-      ) fk on true
       where c.table_schema = $1
         and c.table_name = $2
       order by c.ordinal_position
     `,
     [schema, table],
+  )
+
+  const primaryKeyResult = await client.query<{ column_name: string }>(
+    `
+      select a.attname as column_name
+      from pg_catalog.pg_constraint con
+      join pg_catalog.pg_class rel on rel.oid = con.conrelid
+      join pg_catalog.pg_namespace nsp on nsp.oid = rel.relnamespace
+      join pg_catalog.pg_attribute a
+        on a.attrelid = con.conrelid
+       and a.attnum = any(con.conkey)
+      where nsp.nspname = $1
+        and rel.relname = $2
+        and con.contype = 'p'
+        and a.attnum > 0
+        and not a.attisdropped
+      order by array_position(con.conkey, a.attnum)
+    `,
+    [schema, table],
+  )
+
+  const foreignKeyColumnsResult = await client.query<{ column_name: string }>(
+    `
+      select distinct a.attname as column_name
+      from pg_catalog.pg_constraint con
+      join pg_catalog.pg_class rel on rel.oid = con.conrelid
+      join pg_catalog.pg_namespace nsp on nsp.oid = rel.relnamespace
+      join pg_catalog.pg_attribute a
+        on a.attrelid = con.conrelid
+       and a.attnum = any(con.conkey)
+      where nsp.nspname = $1
+        and rel.relname = $2
+        and con.contype = 'f'
+        and a.attnum > 0
+        and not a.attisdropped
+    `,
+    [schema, table],
+  )
+
+  const primaryKeyColumns = new Set(
+    primaryKeyResult.rows.map((row) => row.column_name),
+  )
+  const foreignKeyColumns = new Set(
+    foreignKeyColumnsResult.rows.map((row) => row.column_name),
   )
 
   const indexesResult = await client.query<{
@@ -161,22 +193,29 @@ export async function getTableStructure(
   }>(
     `
       select
-        tc.constraint_name as name,
-        kcu.column_name as column,
-        ccu.table_schema as referenced_schema,
-        ccu.table_name as referenced_table,
-        ccu.column_name as referenced_column
-      from information_schema.table_constraints tc
-      join information_schema.key_column_usage kcu
-        on tc.constraint_name = kcu.constraint_name
-       and tc.table_schema = kcu.table_schema
-      join information_schema.constraint_column_usage ccu
-        on ccu.constraint_name = tc.constraint_name
-       and ccu.table_schema = tc.table_schema
-      where tc.constraint_type = 'FOREIGN KEY'
-        and tc.table_schema = $1
-        and tc.table_name = $2
-      order by tc.constraint_name, kcu.ordinal_position
+        con.conname as name,
+        att.attname as column,
+        fnsp.nspname as referenced_schema,
+        frel.relname as referenced_table,
+        fatt.attname as referenced_column
+      from pg_catalog.pg_constraint con
+      join pg_catalog.pg_class rel on rel.oid = con.conrelid
+      join pg_catalog.pg_namespace nsp on nsp.oid = rel.relnamespace
+      join lateral unnest(con.conkey) with ordinality as ck(attnum, ord) on true
+      join pg_catalog.pg_attribute att
+        on att.attrelid = con.conrelid
+       and att.attnum = ck.attnum
+      join lateral unnest(con.confkey) with ordinality as fk(attnum, ord)
+        on fk.ord = ck.ord
+      join pg_catalog.pg_attribute fatt
+        on fatt.attrelid = con.confrelid
+       and fatt.attnum = fk.attnum
+      join pg_catalog.pg_class frel on frel.oid = con.confrelid
+      join pg_catalog.pg_namespace fnsp on fnsp.oid = frel.relnamespace
+      where nsp.nspname = $1
+        and rel.relname = $2
+        and con.contype = 'f'
+      order by con.conname, ck.ord
     `,
     [schema, table],
   )
@@ -186,8 +225,8 @@ export async function getTableStructure(
     dataType: row.data_type,
     isNullable: row.is_nullable === 'YES',
     defaultValue: row.column_default,
-    isPrimaryKey: row.is_primary_key,
-    isForeignKey: row.is_foreign_key,
+    isPrimaryKey: primaryKeyColumns.has(row.name),
+    isForeignKey: foreignKeyColumns.has(row.name),
   }))
 
   const indexes: IndexInfo[] = indexesResult.rows.map((row) => ({
