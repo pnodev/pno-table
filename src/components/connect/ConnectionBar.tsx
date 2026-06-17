@@ -6,7 +6,6 @@ import { Button } from '#/components/ui/button'
 import {
   SegmentTab,
   SegmentTabs,
-  SegmentTabsBar,
 } from '#/components/ui/nav-patterns'
 import type { ConnectionProfile } from '#/lib/connections/types'
 
@@ -50,31 +49,29 @@ export function ConnectionBar({ connection, database }: ConnectionBarProps) {
           <Badge variant="secondary">Read-only</Badge>
         ) : null}
 
-        <SegmentTabsBar className="ml-auto">
-          <SegmentTabs>
-            <SegmentTab
-              to="/connect/$connectionId"
-              params={{ connectionId: connection.id }}
-              active={browseActive}
-            >
-              Browse
-            </SegmentTab>
-            <SegmentTab
-              to="/connect/$connectionId/databases"
-              params={{ connectionId: connection.id }}
-              active={databasesActive}
-            >
-              Databases
-            </SegmentTab>
-            <SegmentTab
-              to="/connect/$connectionId/users"
-              params={{ connectionId: connection.id }}
-              active={usersActive}
-            >
-              Users
-            </SegmentTab>
-          </SegmentTabs>
-        </SegmentTabsBar>
+        <SegmentTabs className="ml-auto shrink-0">
+          <SegmentTab
+            to="/connect/$connectionId"
+            params={{ connectionId: connection.id }}
+            active={browseActive}
+          >
+            Browse
+          </SegmentTab>
+          <SegmentTab
+            to="/connect/$connectionId/databases"
+            params={{ connectionId: connection.id }}
+            active={databasesActive}
+          >
+            Databases
+          </SegmentTab>
+          <SegmentTab
+            to="/connect/$connectionId/users"
+            params={{ connectionId: connection.id }}
+            active={usersActive}
+          >
+            Users
+          </SegmentTab>
+        </SegmentTabs>
       </div>
     </div>
   )
