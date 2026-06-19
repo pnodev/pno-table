@@ -3,7 +3,7 @@ import { Table2 } from 'lucide-react'
 
 import { connectRouteApi } from '#/lib/connect/route-api'
 
-export const Route = createFileRoute('/connect/$connectionId/')({
+export const Route = createFileRoute('/_app/connect/$connectionId/')({
   component: ConnectHomePage,
 })
 

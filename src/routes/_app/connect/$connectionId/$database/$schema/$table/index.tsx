@@ -7,7 +7,7 @@ import { connectRouteApi } from '#/lib/connect/route-api'
 import { fetchTableBrowse, fetchTableStructure } from '#/server/browse'
 
 export const Route = createFileRoute(
-  '/connect/$connectionId/$database/$schema/$table/',
+  '/_app/connect/$connectionId/$database/$schema/$table/',
 )({
   validateSearch: tableBrowseSearchSchema,
   loaderDeps: ({ search }) => search,

@@ -71,13 +71,19 @@ console.log(env.VITE_APP_TITLE);
 This project uses Nitro as a generic server adapter, so it can run on any Node-compatible host.
 
 ```bash
-npm run build
-node dist/server/index.mjs
+pnpm run build
+pnpm start
 ```
 
-The build output is a self-contained Node server. To deploy, push the `dist/` directory to your host (Render, Fly.io, your own VPS, etc.) and run the server command above.
+The build output is a self-contained Node server in `.output/`.
 
-For host-specific presets (Vercel, Netlify, Cloudflare, AWS Lambda, etc.) and tuning, see https://v3.nitro.build/deploy.
+### Coolify
+
+A production `Dockerfile` and step-by-step guide are in [docs/deploy-coolify.md](docs/deploy-coolify.md).
+
+Quick checklist: Dockerfile build pack, port `3000`, env `PNO_MASTER_KEY`, persistent volume at `/data`.
+
+For other host-specific Nitro presets (Vercel, Netlify, Cloudflare, AWS Lambda, etc.), see https://v3.nitro.build/deploy.
 
 
 

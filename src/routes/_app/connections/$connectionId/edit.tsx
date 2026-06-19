@@ -3,7 +3,7 @@ import { createFileRoute, notFound } from '@tanstack/react-router'
 import { ConnectionForm } from '#/components/connections/ConnectionForm'
 import { getConnection } from '#/server/connections'
 
-export const Route = createFileRoute('/connections/$connectionId/edit')({
+export const Route = createFileRoute('/_app/connections/$connectionId/edit')({
   component: EditConnectionPage,
   loader: async ({ params }) => {
     const connection = await getConnection({ data: { id: params.connectionId } })

@@ -1,6 +1,22 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { LogOut } from 'lucide-react'
 
-export default function Header() {
+import { Button } from '#/components/ui/button'
+import { defaultAuthStatus, type AuthStatus } from '#/lib/auth/types'
+import { logout } from '#/server/auth'
+
+type HeaderProps = {
+  auth?: AuthStatus
+}
+
+export default function Header({ auth = defaultAuthStatus }: HeaderProps) {
+  const navigate = useNavigate()
+
+  async function handleLogout() {
+    await logout()
+    await navigate({ to: '/login' })
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card shadow-sm">
       <nav className="page-wrap flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
@@ -29,6 +45,15 @@ export default function Header() {
             New connection
           </Link>
         </div>
+
+        {auth.enabled && auth.authenticated ? (
+          <div className="ml-auto">
+            <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="size-4" />
+              Sign out
+            </Button>
+          </div>
+        ) : null}
       </nav>
     </header>
   )

@@ -5,7 +5,7 @@ import { ConnectionCard } from '#/components/connections/ConnectionCard'
 import { Button } from '#/components/ui/button'
 import { listConnections } from '#/server/connections'
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/_app/')({
   component: ConnectionsPage,
   loader: async () => await listConnections(),
 })

@@ -4,7 +4,7 @@ import { DatabaseManager } from '#/components/admin/DatabaseManager'
 import { connectRouteApi } from '#/lib/connect/route-api'
 import { fetchDatabaseDetails } from '#/server/admin'
 
-export const Route = createFileRoute('/connect/$connectionId/databases')({
+export const Route = createFileRoute('/_app/connect/$connectionId/databases')({
   component: DatabasesPage,
   loader: async ({ params }) => {
     const databases = await fetchDatabaseDetails({

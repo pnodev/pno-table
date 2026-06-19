@@ -10,7 +10,7 @@ import { DatabaseTree } from '#/components/connect/DatabaseTree'
 import { connectRouteApi } from '#/lib/connect/route-api'
 import { getConnection } from '#/server/connections'
 
-export const Route = createFileRoute('/connect/$connectionId')({
+export const Route = createFileRoute('/_app/connect/$connectionId')({
   component: ConnectLayout,
   loader: async ({ params }) => {
     const connection = await getConnection({

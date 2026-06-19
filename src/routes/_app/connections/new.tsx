@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { ConnectionForm } from '#/components/connections/ConnectionForm'
 
-export const Route = createFileRoute('/connections/new')({
+export const Route = createFileRoute('/_app/connections/new')({
   component: NewConnectionPage,
 })
 

@@ -4,7 +4,7 @@ import { RoleManager } from '#/components/admin/RoleManager'
 import { connectRouteApi } from '#/lib/connect/route-api'
 import { fetchRoles } from '#/server/admin'
 
-export const Route = createFileRoute('/connect/$connectionId/users')({
+export const Route = createFileRoute('/_app/connect/$connectionId/users')({
   component: UsersPage,
   loader: async ({ params }) => {
     const roles = await fetchRoles({

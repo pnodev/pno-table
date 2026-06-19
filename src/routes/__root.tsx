@@ -2,13 +2,15 @@ import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
+  redirect,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import Header from '../components/Header'
 import { Toaster } from '../components/ui/sonner'
 
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
+
+import { getAuthStatus } from '#/server/auth'
 
 import appCss from '../styles.css?url'
 
@@ -19,6 +21,24 @@ interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+  beforeLoad: async ({ location }) => {
+    const auth = await getAuthStatus()
+
+    if (auth.enabled && !auth.authenticated && location.pathname !== '/login') {
+      throw redirect({
+        to: '/login',
+        search: {
+          redirect: location.href,
+        },
+      })
+    }
+
+    if (auth.enabled && auth.authenticated && location.pathname === '/login') {
+      throw redirect({ to: '/' })
+    }
+
+    return { auth }
+  },
   head: () => ({
     meta: [
       {
@@ -49,7 +69,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-brand/20 selection:text-foreground">
-        <Header />
         {children}
         <Toaster richColors closeButton position="bottom-right" />
         <TanStackDevtools

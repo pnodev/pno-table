@@ -9,106 +9,122 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ConnectionsNewRouteImport } from './routes/connections/new'
-import { Route as ConnectConnectionIdRouteRouteImport } from './routes/connect/$connectionId/route'
-import { Route as ConnectConnectionIdIndexRouteImport } from './routes/connect/$connectionId/index'
-import { Route as ConnectionsConnectionIdEditRouteImport } from './routes/connections/$connectionId/edit'
-import { Route as ConnectConnectionIdUsersRouteImport } from './routes/connect/$connectionId/users'
-import { Route as ConnectConnectionIdDatabasesRouteImport } from './routes/connect/$connectionId/databases'
-import { Route as ConnectConnectionIdDatabaseSchemaTableIndexRouteImport } from './routes/connect/$connectionId/$database/$schema/$table/index'
-import { Route as ConnectConnectionIdDatabaseSchemaTableStructureRouteImport } from './routes/connect/$connectionId/$database/$schema/$table/structure'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteRouteImport } from './routes/_app/route'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppConnectionsNewRouteImport } from './routes/_app/connections/new'
+import { Route as AppConnectConnectionIdRouteRouteImport } from './routes/_app/connect/$connectionId/route'
+import { Route as AppConnectConnectionIdIndexRouteImport } from './routes/_app/connect/$connectionId/index'
+import { Route as AppConnectionsConnectionIdEditRouteImport } from './routes/_app/connections/$connectionId/edit'
+import { Route as AppConnectConnectionIdUsersRouteImport } from './routes/_app/connect/$connectionId/users'
+import { Route as AppConnectConnectionIdDatabasesRouteImport } from './routes/_app/connect/$connectionId/databases'
+import { Route as AppConnectConnectionIdDatabaseSchemaTableIndexRouteImport } from './routes/_app/connect/$connectionId/$database/$schema/$table/index'
+import { Route as AppConnectConnectionIdDatabaseSchemaTableStructureRouteImport } from './routes/_app/connect/$connectionId/$database/$schema/$table/structure'
 
-const IndexRoute = IndexRouteImport.update({
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const ConnectionsNewRoute = ConnectionsNewRouteImport.update({
+const AppConnectionsNewRoute = AppConnectionsNewRouteImport.update({
   id: '/connections/new',
   path: '/connections/new',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const ConnectConnectionIdRouteRoute =
-  ConnectConnectionIdRouteRouteImport.update({
+const AppConnectConnectionIdRouteRoute =
+  AppConnectConnectionIdRouteRouteImport.update({
     id: '/connect/$connectionId',
     path: '/connect/$connectionId',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AppRouteRoute,
   } as any)
-const ConnectConnectionIdIndexRoute =
-  ConnectConnectionIdIndexRouteImport.update({
+const AppConnectConnectionIdIndexRoute =
+  AppConnectConnectionIdIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => ConnectConnectionIdRouteRoute,
+    getParentRoute: () => AppConnectConnectionIdRouteRoute,
   } as any)
-const ConnectionsConnectionIdEditRoute =
-  ConnectionsConnectionIdEditRouteImport.update({
+const AppConnectionsConnectionIdEditRoute =
+  AppConnectionsConnectionIdEditRouteImport.update({
     id: '/connections/$connectionId/edit',
     path: '/connections/$connectionId/edit',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AppRouteRoute,
   } as any)
-const ConnectConnectionIdUsersRoute =
-  ConnectConnectionIdUsersRouteImport.update({
+const AppConnectConnectionIdUsersRoute =
+  AppConnectConnectionIdUsersRouteImport.update({
     id: '/users',
     path: '/users',
-    getParentRoute: () => ConnectConnectionIdRouteRoute,
+    getParentRoute: () => AppConnectConnectionIdRouteRoute,
   } as any)
-const ConnectConnectionIdDatabasesRoute =
-  ConnectConnectionIdDatabasesRouteImport.update({
+const AppConnectConnectionIdDatabasesRoute =
+  AppConnectConnectionIdDatabasesRouteImport.update({
     id: '/databases',
     path: '/databases',
-    getParentRoute: () => ConnectConnectionIdRouteRoute,
+    getParentRoute: () => AppConnectConnectionIdRouteRoute,
   } as any)
-const ConnectConnectionIdDatabaseSchemaTableIndexRoute =
-  ConnectConnectionIdDatabaseSchemaTableIndexRouteImport.update({
+const AppConnectConnectionIdDatabaseSchemaTableIndexRoute =
+  AppConnectConnectionIdDatabaseSchemaTableIndexRouteImport.update({
     id: '/$database/$schema/$table/',
     path: '/$database/$schema/$table/',
-    getParentRoute: () => ConnectConnectionIdRouteRoute,
+    getParentRoute: () => AppConnectConnectionIdRouteRoute,
   } as any)
-const ConnectConnectionIdDatabaseSchemaTableStructureRoute =
-  ConnectConnectionIdDatabaseSchemaTableStructureRouteImport.update({
+const AppConnectConnectionIdDatabaseSchemaTableStructureRoute =
+  AppConnectConnectionIdDatabaseSchemaTableStructureRouteImport.update({
     id: '/$database/$schema/$table/structure',
     path: '/$database/$schema/$table/structure',
-    getParentRoute: () => ConnectConnectionIdRouteRoute,
+    getParentRoute: () => AppConnectConnectionIdRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/connect/$connectionId': typeof ConnectConnectionIdRouteRouteWithChildren
-  '/connections/new': typeof ConnectionsNewRoute
-  '/connect/$connectionId/databases': typeof ConnectConnectionIdDatabasesRoute
-  '/connect/$connectionId/users': typeof ConnectConnectionIdUsersRoute
-  '/connections/$connectionId/edit': typeof ConnectionsConnectionIdEditRoute
-  '/connect/$connectionId/': typeof ConnectConnectionIdIndexRoute
-  '/connect/$connectionId/$database/$schema/$table/structure': typeof ConnectConnectionIdDatabaseSchemaTableStructureRoute
-  '/connect/$connectionId/$database/$schema/$table/': typeof ConnectConnectionIdDatabaseSchemaTableIndexRoute
+  '/': typeof AppIndexRoute
+  '/login': typeof LoginRoute
+  '/connect/$connectionId': typeof AppConnectConnectionIdRouteRouteWithChildren
+  '/connections/new': typeof AppConnectionsNewRoute
+  '/connect/$connectionId/databases': typeof AppConnectConnectionIdDatabasesRoute
+  '/connect/$connectionId/users': typeof AppConnectConnectionIdUsersRoute
+  '/connections/$connectionId/edit': typeof AppConnectionsConnectionIdEditRoute
+  '/connect/$connectionId/': typeof AppConnectConnectionIdIndexRoute
+  '/connect/$connectionId/$database/$schema/$table/structure': typeof AppConnectConnectionIdDatabaseSchemaTableStructureRoute
+  '/connect/$connectionId/$database/$schema/$table/': typeof AppConnectConnectionIdDatabaseSchemaTableIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/connections/new': typeof ConnectionsNewRoute
-  '/connect/$connectionId/databases': typeof ConnectConnectionIdDatabasesRoute
-  '/connect/$connectionId/users': typeof ConnectConnectionIdUsersRoute
-  '/connections/$connectionId/edit': typeof ConnectionsConnectionIdEditRoute
-  '/connect/$connectionId': typeof ConnectConnectionIdIndexRoute
-  '/connect/$connectionId/$database/$schema/$table/structure': typeof ConnectConnectionIdDatabaseSchemaTableStructureRoute
-  '/connect/$connectionId/$database/$schema/$table': typeof ConnectConnectionIdDatabaseSchemaTableIndexRoute
+  '/login': typeof LoginRoute
+  '/': typeof AppIndexRoute
+  '/connections/new': typeof AppConnectionsNewRoute
+  '/connect/$connectionId/databases': typeof AppConnectConnectionIdDatabasesRoute
+  '/connect/$connectionId/users': typeof AppConnectConnectionIdUsersRoute
+  '/connections/$connectionId/edit': typeof AppConnectionsConnectionIdEditRoute
+  '/connect/$connectionId': typeof AppConnectConnectionIdIndexRoute
+  '/connect/$connectionId/$database/$schema/$table/structure': typeof AppConnectConnectionIdDatabaseSchemaTableStructureRoute
+  '/connect/$connectionId/$database/$schema/$table': typeof AppConnectConnectionIdDatabaseSchemaTableIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/connect/$connectionId': typeof ConnectConnectionIdRouteRouteWithChildren
-  '/connections/new': typeof ConnectionsNewRoute
-  '/connect/$connectionId/databases': typeof ConnectConnectionIdDatabasesRoute
-  '/connect/$connectionId/users': typeof ConnectConnectionIdUsersRoute
-  '/connections/$connectionId/edit': typeof ConnectionsConnectionIdEditRoute
-  '/connect/$connectionId/': typeof ConnectConnectionIdIndexRoute
-  '/connect/$connectionId/$database/$schema/$table/structure': typeof ConnectConnectionIdDatabaseSchemaTableStructureRoute
-  '/connect/$connectionId/$database/$schema/$table/': typeof ConnectConnectionIdDatabaseSchemaTableIndexRoute
+  '/_app': typeof AppRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/connect/$connectionId': typeof AppConnectConnectionIdRouteRouteWithChildren
+  '/_app/connections/new': typeof AppConnectionsNewRoute
+  '/_app/connect/$connectionId/databases': typeof AppConnectConnectionIdDatabasesRoute
+  '/_app/connect/$connectionId/users': typeof AppConnectConnectionIdUsersRoute
+  '/_app/connections/$connectionId/edit': typeof AppConnectionsConnectionIdEditRoute
+  '/_app/connect/$connectionId/': typeof AppConnectConnectionIdIndexRoute
+  '/_app/connect/$connectionId/$database/$schema/$table/structure': typeof AppConnectConnectionIdDatabaseSchemaTableStructureRoute
+  '/_app/connect/$connectionId/$database/$schema/$table/': typeof AppConnectConnectionIdDatabaseSchemaTableIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/connect/$connectionId'
     | '/connections/new'
     | '/connect/$connectionId/databases'
@@ -119,6 +135,7 @@ export interface FileRouteTypes {
     | '/connect/$connectionId/$database/$schema/$table/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/login'
     | '/'
     | '/connections/new'
     | '/connect/$connectionId/databases'
@@ -129,131 +146,163 @@ export interface FileRouteTypes {
     | '/connect/$connectionId/$database/$schema/$table'
   id:
     | '__root__'
-    | '/'
-    | '/connect/$connectionId'
-    | '/connections/new'
-    | '/connect/$connectionId/databases'
-    | '/connect/$connectionId/users'
-    | '/connections/$connectionId/edit'
-    | '/connect/$connectionId/'
-    | '/connect/$connectionId/$database/$schema/$table/structure'
-    | '/connect/$connectionId/$database/$schema/$table/'
+    | '/_app'
+    | '/login'
+    | '/_app/'
+    | '/_app/connect/$connectionId'
+    | '/_app/connections/new'
+    | '/_app/connect/$connectionId/databases'
+    | '/_app/connect/$connectionId/users'
+    | '/_app/connections/$connectionId/edit'
+    | '/_app/connect/$connectionId/'
+    | '/_app/connect/$connectionId/$database/$schema/$table/structure'
+    | '/_app/connect/$connectionId/$database/$schema/$table/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ConnectConnectionIdRouteRoute: typeof ConnectConnectionIdRouteRouteWithChildren
-  ConnectionsNewRoute: typeof ConnectionsNewRoute
-  ConnectionsConnectionIdEditRoute: typeof ConnectionsConnectionIdEditRoute
+  AppRouteRoute: typeof AppRouteRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/connections/new': {
-      id: '/connections/new'
+    '/_app/connections/new': {
+      id: '/_app/connections/new'
       path: '/connections/new'
       fullPath: '/connections/new'
-      preLoaderRoute: typeof ConnectionsNewRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppConnectionsNewRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/connect/$connectionId': {
-      id: '/connect/$connectionId'
+    '/_app/connect/$connectionId': {
+      id: '/_app/connect/$connectionId'
       path: '/connect/$connectionId'
       fullPath: '/connect/$connectionId'
-      preLoaderRoute: typeof ConnectConnectionIdRouteRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppConnectConnectionIdRouteRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/connect/$connectionId/': {
-      id: '/connect/$connectionId/'
+    '/_app/connect/$connectionId/': {
+      id: '/_app/connect/$connectionId/'
       path: '/'
       fullPath: '/connect/$connectionId/'
-      preLoaderRoute: typeof ConnectConnectionIdIndexRouteImport
-      parentRoute: typeof ConnectConnectionIdRouteRoute
+      preLoaderRoute: typeof AppConnectConnectionIdIndexRouteImport
+      parentRoute: typeof AppConnectConnectionIdRouteRoute
     }
-    '/connections/$connectionId/edit': {
-      id: '/connections/$connectionId/edit'
+    '/_app/connections/$connectionId/edit': {
+      id: '/_app/connections/$connectionId/edit'
       path: '/connections/$connectionId/edit'
       fullPath: '/connections/$connectionId/edit'
-      preLoaderRoute: typeof ConnectionsConnectionIdEditRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppConnectionsConnectionIdEditRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/connect/$connectionId/users': {
-      id: '/connect/$connectionId/users'
+    '/_app/connect/$connectionId/users': {
+      id: '/_app/connect/$connectionId/users'
       path: '/users'
       fullPath: '/connect/$connectionId/users'
-      preLoaderRoute: typeof ConnectConnectionIdUsersRouteImport
-      parentRoute: typeof ConnectConnectionIdRouteRoute
+      preLoaderRoute: typeof AppConnectConnectionIdUsersRouteImport
+      parentRoute: typeof AppConnectConnectionIdRouteRoute
     }
-    '/connect/$connectionId/databases': {
-      id: '/connect/$connectionId/databases'
+    '/_app/connect/$connectionId/databases': {
+      id: '/_app/connect/$connectionId/databases'
       path: '/databases'
       fullPath: '/connect/$connectionId/databases'
-      preLoaderRoute: typeof ConnectConnectionIdDatabasesRouteImport
-      parentRoute: typeof ConnectConnectionIdRouteRoute
+      preLoaderRoute: typeof AppConnectConnectionIdDatabasesRouteImport
+      parentRoute: typeof AppConnectConnectionIdRouteRoute
     }
-    '/connect/$connectionId/$database/$schema/$table/': {
-      id: '/connect/$connectionId/$database/$schema/$table/'
+    '/_app/connect/$connectionId/$database/$schema/$table/': {
+      id: '/_app/connect/$connectionId/$database/$schema/$table/'
       path: '/$database/$schema/$table'
       fullPath: '/connect/$connectionId/$database/$schema/$table/'
-      preLoaderRoute: typeof ConnectConnectionIdDatabaseSchemaTableIndexRouteImport
-      parentRoute: typeof ConnectConnectionIdRouteRoute
+      preLoaderRoute: typeof AppConnectConnectionIdDatabaseSchemaTableIndexRouteImport
+      parentRoute: typeof AppConnectConnectionIdRouteRoute
     }
-    '/connect/$connectionId/$database/$schema/$table/structure': {
-      id: '/connect/$connectionId/$database/$schema/$table/structure'
+    '/_app/connect/$connectionId/$database/$schema/$table/structure': {
+      id: '/_app/connect/$connectionId/$database/$schema/$table/structure'
       path: '/$database/$schema/$table/structure'
       fullPath: '/connect/$connectionId/$database/$schema/$table/structure'
-      preLoaderRoute: typeof ConnectConnectionIdDatabaseSchemaTableStructureRouteImport
-      parentRoute: typeof ConnectConnectionIdRouteRoute
+      preLoaderRoute: typeof AppConnectConnectionIdDatabaseSchemaTableStructureRouteImport
+      parentRoute: typeof AppConnectConnectionIdRouteRoute
     }
   }
 }
 
-interface ConnectConnectionIdRouteRouteChildren {
-  ConnectConnectionIdDatabasesRoute: typeof ConnectConnectionIdDatabasesRoute
-  ConnectConnectionIdUsersRoute: typeof ConnectConnectionIdUsersRoute
-  ConnectConnectionIdIndexRoute: typeof ConnectConnectionIdIndexRoute
-  ConnectConnectionIdDatabaseSchemaTableStructureRoute: typeof ConnectConnectionIdDatabaseSchemaTableStructureRoute
-  ConnectConnectionIdDatabaseSchemaTableIndexRoute: typeof ConnectConnectionIdDatabaseSchemaTableIndexRoute
+interface AppConnectConnectionIdRouteRouteChildren {
+  AppConnectConnectionIdDatabasesRoute: typeof AppConnectConnectionIdDatabasesRoute
+  AppConnectConnectionIdUsersRoute: typeof AppConnectConnectionIdUsersRoute
+  AppConnectConnectionIdIndexRoute: typeof AppConnectConnectionIdIndexRoute
+  AppConnectConnectionIdDatabaseSchemaTableStructureRoute: typeof AppConnectConnectionIdDatabaseSchemaTableStructureRoute
+  AppConnectConnectionIdDatabaseSchemaTableIndexRoute: typeof AppConnectConnectionIdDatabaseSchemaTableIndexRoute
 }
 
-const ConnectConnectionIdRouteRouteChildren: ConnectConnectionIdRouteRouteChildren =
+const AppConnectConnectionIdRouteRouteChildren: AppConnectConnectionIdRouteRouteChildren =
   {
-    ConnectConnectionIdDatabasesRoute: ConnectConnectionIdDatabasesRoute,
-    ConnectConnectionIdUsersRoute: ConnectConnectionIdUsersRoute,
-    ConnectConnectionIdIndexRoute: ConnectConnectionIdIndexRoute,
-    ConnectConnectionIdDatabaseSchemaTableStructureRoute:
-      ConnectConnectionIdDatabaseSchemaTableStructureRoute,
-    ConnectConnectionIdDatabaseSchemaTableIndexRoute:
-      ConnectConnectionIdDatabaseSchemaTableIndexRoute,
+    AppConnectConnectionIdDatabasesRoute: AppConnectConnectionIdDatabasesRoute,
+    AppConnectConnectionIdUsersRoute: AppConnectConnectionIdUsersRoute,
+    AppConnectConnectionIdIndexRoute: AppConnectConnectionIdIndexRoute,
+    AppConnectConnectionIdDatabaseSchemaTableStructureRoute:
+      AppConnectConnectionIdDatabaseSchemaTableStructureRoute,
+    AppConnectConnectionIdDatabaseSchemaTableIndexRoute:
+      AppConnectConnectionIdDatabaseSchemaTableIndexRoute,
   }
 
-const ConnectConnectionIdRouteRouteWithChildren =
-  ConnectConnectionIdRouteRoute._addFileChildren(
-    ConnectConnectionIdRouteRouteChildren,
+const AppConnectConnectionIdRouteRouteWithChildren =
+  AppConnectConnectionIdRouteRoute._addFileChildren(
+    AppConnectConnectionIdRouteRouteChildren,
   )
 
+interface AppRouteRouteChildren {
+  AppIndexRoute: typeof AppIndexRoute
+  AppConnectConnectionIdRouteRoute: typeof AppConnectConnectionIdRouteRouteWithChildren
+  AppConnectionsNewRoute: typeof AppConnectionsNewRoute
+  AppConnectionsConnectionIdEditRoute: typeof AppConnectionsConnectionIdEditRoute
+}
+
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppIndexRoute: AppIndexRoute,
+  AppConnectConnectionIdRouteRoute:
+    AppConnectConnectionIdRouteRouteWithChildren,
+  AppConnectionsNewRoute: AppConnectionsNewRoute,
+  AppConnectionsConnectionIdEditRoute: AppConnectionsConnectionIdEditRoute,
+}
+
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ConnectConnectionIdRouteRoute: ConnectConnectionIdRouteRouteWithChildren,
-  ConnectionsNewRoute: ConnectionsNewRoute,
-  ConnectionsConnectionIdEditRoute: ConnectionsConnectionIdEditRoute,
+  AppRouteRoute: AppRouteRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

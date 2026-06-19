@@ -5,7 +5,7 @@ import { StructureView } from '#/components/structure/StructureView'
 import { fetchTableStructure } from '#/server/browse'
 
 export const Route = createFileRoute(
-  '/connect/$connectionId/$database/$schema/$table/structure',
+  '/_app/connect/$connectionId/$database/$schema/$table/structure',
 )({
   loader: async ({ params }) => {
     const structure = await fetchTableStructure({

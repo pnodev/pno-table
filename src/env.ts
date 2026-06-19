@@ -7,6 +7,10 @@ export const env = createEnv({
       .string()
       .min(16, 'PNO_MASTER_KEY must be at least 16 characters'),
     PNO_DATA_DIR: z.string().default('./data'),
+    PNO_AUTH_PASSWORD: z
+      .string()
+      .min(8, 'PNO_AUTH_PASSWORD must be at least 8 characters')
+      .optional(),
   },
 
   clientPrefix: 'VITE_',
@@ -18,6 +22,7 @@ export const env = createEnv({
   runtimeEnv: {
     PNO_MASTER_KEY: process.env.PNO_MASTER_KEY,
     PNO_DATA_DIR: process.env.PNO_DATA_DIR,
+    PNO_AUTH_PASSWORD: process.env.PNO_AUTH_PASSWORD,
     VITE_APP_TITLE: import.meta.env.VITE_APP_TITLE,
   },
 

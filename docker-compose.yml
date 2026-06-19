@@ -1,0 +1,15 @@
+services:
+  pno-table:
+    build: .
+    restart: unless-stopped
+    environment:
+      PNO_MASTER_KEY: ${PNO_MASTER_KEY:?Set PNO_MASTER_KEY in .env}
+      PNO_AUTH_PASSWORD: ${PNO_AUTH_PASSWORD:?Set PNO_AUTH_PASSWORD in .env}
+      PNO_DATA_DIR: /data
+      HOST: 0.0.0.0
+      PORT: 3000
+    volumes:
+      - pno-data:/data
+
+volumes:
+  pno-data:
