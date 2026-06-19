@@ -15,11 +15,13 @@ import {
   createRole,
   dropDatabase,
   dropRole,
+  emptyDatabase,
   listDatabaseDetails,
   listRoleDatabaseAccess,
   listRoleNames,
   listRoles,
   revokePublicDatabaseConnect,
+  truncateDatabase,
   updateRole,
 } from '#/lib/pg/admin'
 import { withPgClient, resolveConnection } from '#/lib/pg/resolve-connection'
@@ -101,6 +103,38 @@ export const removeServerDatabase = createServerFn({ method: 'POST' })
       async (client, resolved) => {
         assertWritable(resolved.profile.readOnly)
         await dropDatabase(client, data.values.name)
+        return { success: true as const }
+      },
+    )
+  })
+
+export const truncateServerDatabase = createServerFn({ method: 'POST' })
+  .validator((data) =>
+    connectionIdSchema.extend({ values: dropDatabaseSchema }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    return withPgClient(
+      data.connectionId,
+      data.values.name,
+      async (client, resolved) => {
+        assertWritable(resolved.profile.readOnly)
+        await truncateDatabase(client)
+        return { success: true as const }
+      },
+    )
+  })
+
+export const emptyServerDatabase = createServerFn({ method: 'POST' })
+  .validator((data) =>
+    connectionIdSchema.extend({ values: dropDatabaseSchema }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    return withPgClient(
+      data.connectionId,
+      data.values.name,
+      async (client, resolved) => {
+        assertWritable(resolved.profile.readOnly)
+        await emptyDatabase(client)
         return { success: true as const }
       },
     )

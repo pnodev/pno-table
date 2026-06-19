@@ -38,9 +38,11 @@ import { createDatabaseSchema } from '#/lib/pg/admin-schemas'
 import { formatAppError } from '#/lib/format-error'
 import {
   createServerDatabase,
+  emptyServerDatabase,
   fetchDatabaseDetails,
   fetchRoleNames,
   removeServerDatabase,
+  truncateServerDatabase,
 } from '#/server/admin'
 
 type CreateDatabaseSheetProps = {
@@ -258,6 +260,11 @@ type DatabaseManagerProps = {
   initialDatabases: DatabaseDetails[]
 }
 
+type PendingDatabaseAction =
+  | { type: 'drop'; database: DatabaseDetails }
+  | { type: 'truncate'; database: DatabaseDetails }
+  | { type: 'empty'; database: DatabaseDetails }
+
 export function DatabaseManager({
   connectionId,
   readOnly,
@@ -265,8 +272,9 @@ export function DatabaseManager({
 }: DatabaseManagerProps) {
   const [databases, setDatabases] = useState(initialDatabases)
   const [createOpen, setCreateOpen] = useState(false)
-  const [pendingDrop, setPendingDrop] = useState<DatabaseDetails | null>(null)
-  const [dropping, setDropping] = useState(false)
+  const [pendingAction, setPendingAction] =
+    useState<PendingDatabaseAction | null>(null)
+  const [acting, setActing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const reload = async () => {
@@ -274,28 +282,55 @@ export function DatabaseManager({
     setDatabases(rows)
   }
 
-  const handleDrop = async () => {
-    if (!pendingDrop) {
+  const handleConfirmAction = async () => {
+    if (!pendingAction) {
       return
     }
 
-    setDropping(true)
+    setActing(true)
     setError(null)
 
+    const { database, type } = pendingAction
+
     try {
-      await removeServerDatabase({
-        data: {
-          connectionId,
-          values: { name: pendingDrop.name },
-        },
-      })
-      toast.success(`Database "${pendingDrop.name}" dropped`)
-      setPendingDrop(null)
+      if (type === 'drop') {
+        await removeServerDatabase({
+          data: {
+            connectionId,
+            values: { name: database.name },
+          },
+        })
+        toast.success(`Database "${database.name}" dropped`)
+      } else if (type === 'truncate') {
+        await truncateServerDatabase({
+          data: {
+            connectionId,
+            values: { name: database.name },
+          },
+        })
+        toast.success(`Database "${database.name}" truncated`)
+      } else {
+        await emptyServerDatabase({
+          data: {
+            connectionId,
+            values: { name: database.name },
+          },
+        })
+        toast.success(`Database "${database.name}" emptied`)
+      }
+
+      setPendingAction(null)
       await reload()
-    } catch (dropError) {
-      setError(formatAppError(dropError, 'Failed to drop database'))
+    } catch (actionError) {
+      const fallback =
+        type === 'drop'
+          ? 'Failed to drop database'
+          : type === 'truncate'
+            ? 'Failed to truncate database'
+            : 'Failed to empty database'
+      setError(formatAppError(actionError, fallback))
     } finally {
-      setDropping(false)
+      setActing(false)
     }
   }
 
@@ -352,14 +387,39 @@ export function DatabaseManager({
                 </td>
                 {!readOnly ? (
                   <td className="px-3 py-2 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => setPendingDrop(database)}
-                    >
-                      Drop
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setPendingAction({
+                            type: 'truncate',
+                            database,
+                          })
+                        }
+                      >
+                        Truncate
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setPendingAction({ type: 'empty', database })
+                        }
+                      >
+                        Empty
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() =>
+                          setPendingAction({ type: 'drop', database })
+                        }
+                      >
+                        Drop
+                      </Button>
+                    </div>
                   </td>
                 ) : null}
               </tr>
@@ -376,33 +436,67 @@ export function DatabaseManager({
       />
 
       <AlertDialog
-        open={pendingDrop !== null}
+        open={pendingAction !== null}
         onOpenChange={(open) => {
           if (!open) {
-            setPendingDrop(null)
+            setPendingAction(null)
           }
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Drop database?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {pendingAction?.type === 'drop'
+                ? 'Drop database?'
+                : pendingAction?.type === 'truncate'
+                  ? 'Truncate database?'
+                  : 'Empty database?'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete{' '}
-              <span className="font-mono">{pendingDrop?.name}</span> and all of
-              its data. Active connections will be terminated first.
+              {pendingAction?.type === 'drop' ? (
+                <>
+                  This will permanently delete{' '}
+                  <span className="font-mono">{pendingAction.database.name}</span>{' '}
+                  and all of its data. Active connections will be terminated first.
+                </>
+              ) : pendingAction?.type === 'truncate' ? (
+                <>
+                  This will remove all rows from every table in{' '}
+                  <span className="font-mono">{pendingAction.database.name}</span>.
+                  Table structures, views, and other objects are kept. Active
+                  connections will be terminated first.
+                </>
+              ) : pendingAction?.type === 'empty' ? (
+                <>
+                  This will drop all tables, views, sequences, and related objects
+                  in <span className="font-mono">{pendingAction.database.name}</span>.
+                  The database itself is kept. Active connections will be terminated
+                  first.
+                </>
+              ) : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={dropping}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={acting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              disabled={dropping}
+              disabled={acting}
               onClick={(event) => {
                 event.preventDefault()
-                void handleDrop()
+                void handleConfirmAction()
               }}
             >
-              {dropping ? 'Dropping...' : 'Drop database'}
+              {acting
+                ? pendingAction?.type === 'drop'
+                  ? 'Dropping...'
+                  : pendingAction?.type === 'truncate'
+                    ? 'Truncating...'
+                    : 'Emptying...'
+                : pendingAction?.type === 'drop'
+                  ? 'Drop database'
+                  : pendingAction?.type === 'truncate'
+                    ? 'Truncate database'
+                    : 'Empty database'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

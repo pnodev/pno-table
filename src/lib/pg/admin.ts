@@ -1,7 +1,16 @@
 import type pg from 'pg'
 
 import type { DatabaseDetails, RoleDatabaseAccess, RoleInfo } from '#/lib/pg/catalog-types'
-import { quoteIdentifier, quoteStringLiteral } from '#/lib/pg/identifiers'
+import {
+  quoteIdentifier,
+  quoteQualifiedName,
+  quoteStringLiteral,
+} from '#/lib/pg/identifiers'
+
+const USER_SCHEMA_SQL = `
+  n.nspname not like 'pg\\_%' escape '\\'
+  and n.nspname <> 'information_schema'
+`
 
 export async function listDatabaseDetails(
   client: pg.Client,
@@ -144,6 +153,103 @@ export async function createDatabase(
   }
 
   await client.query(parts.join(' '))
+}
+
+async function terminateOtherBackends(client: pg.Client): Promise<void> {
+  await client.query(`
+    select pg_catalog.pg_terminate_backend(pid)
+    from pg_catalog.pg_stat_activity
+    where datname = pg_catalog.current_database()
+      and pid <> pg_catalog.pg_backend_pid()
+  `)
+}
+
+async function listUserTableQualifiedNames(client: pg.Client): Promise<string[]> {
+  const result = await client.query<{ schema_name: string; table_name: string }>(
+    `
+      select
+        n.nspname as schema_name,
+        c.relname as table_name
+      from pg_catalog.pg_class c
+      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+      where ${USER_SCHEMA_SQL}
+        and c.relkind in ('r', 'p')
+      order by n.nspname, c.relname
+    `,
+  )
+
+  return result.rows.map((row) =>
+    quoteQualifiedName(row.schema_name, row.table_name),
+  )
+}
+
+export async function truncateDatabase(client: pg.Client): Promise<void> {
+  await terminateOtherBackends(client)
+
+  const tables = await listUserTableQualifiedNames(client)
+
+  if (tables.length === 0) {
+    return
+  }
+
+  await client.query(
+    `truncate table ${tables.join(', ')} restart identity cascade`,
+  )
+}
+
+export async function emptyDatabase(client: pg.Client): Promise<void> {
+  await terminateOtherBackends(client)
+
+  await client.query(`
+    do $do$
+    declare
+      obj record;
+    begin
+      for obj in
+        select
+          n.nspname as schema_name,
+          c.relname as object_name,
+          c.relkind as kind
+        from pg_catalog.pg_class c
+        join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+        where ${USER_SCHEMA_SQL}
+          and c.relkind in ('v', 'm', 'r', 'p', 'f', 'S')
+        order by
+          case c.relkind
+            when 'v' then 1
+            when 'm' then 2
+            when 'r' then 3
+            when 'p' then 3
+            when 'f' then 3
+            when 'S' then 4
+          end,
+          n.nspname,
+          c.relname
+      loop
+        case obj.kind
+          when 'v' then
+            execute format('drop view %I.%I cascade', obj.schema_name, obj.object_name);
+          when 'm' then
+            execute format(
+              'drop materialized view %I.%I cascade',
+              obj.schema_name,
+              obj.object_name
+            );
+          when 'r', 'p' then
+            execute format('drop table %I.%I cascade', obj.schema_name, obj.object_name);
+          when 'f' then
+            execute format(
+              'drop foreign table %I.%I cascade',
+              obj.schema_name,
+              obj.object_name
+            );
+          when 'S' then
+            execute format('drop sequence %I.%I cascade', obj.schema_name, obj.object_name);
+        end case;
+      end loop;
+    end
+    $do$
+  `)
 }
 
 export async function dropDatabase(

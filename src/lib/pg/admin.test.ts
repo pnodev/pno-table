@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { buildDatabasePrivilegeStatement, formatRoleSql } from '#/lib/pg/admin'
+import {
+  buildDatabasePrivilegeStatement,
+  emptyDatabase,
+  formatRoleSql,
+  truncateDatabase,
+} from '#/lib/pg/admin'
 
 describe('buildDatabasePrivilegeStatement', () => {
   it('builds grant connect statements', () => {
@@ -44,5 +49,71 @@ describe('formatRoleSql', () => {
 
   it('uses PUBLIC keyword for the public role', () => {
     expect(formatRoleSql('PUBLIC')).toBe('PUBLIC')
+  })
+})
+
+describe('truncateDatabase', () => {
+  it('truncates all user tables with restart identity cascade', async () => {
+    const queries: string[] = []
+    const client = {
+      query: vi.fn(async (sql: string) => {
+        queries.push(sql)
+
+        if (sql.includes('pg_stat_activity')) {
+          return { rows: [] }
+        }
+
+        return {
+          rows: [
+            { schema_name: 'public', table_name: 'users' },
+            { schema_name: 'app', table_name: 'events' },
+          ],
+        }
+      }),
+    }
+
+    await truncateDatabase(client as never)
+
+    expect(queries).toHaveLength(3)
+    expect(queries[1]).toContain('from pg_catalog.pg_class')
+    expect(queries[2]).toBe(
+      'truncate table "public"."users", "app"."events" restart identity cascade',
+    )
+  })
+
+  it('skips truncate when there are no user tables', async () => {
+    const queries: string[] = []
+    const client = {
+      query: vi.fn(async (sql: string) => {
+        queries.push(sql)
+        return { rows: [] }
+      }),
+    }
+
+    await truncateDatabase(client as never)
+
+    expect(queries).toHaveLength(2)
+    expect(queries.some((sql) => sql.startsWith('truncate table'))).toBe(false)
+  })
+})
+
+describe('emptyDatabase', () => {
+  it('drops user objects in dependency order', async () => {
+    const queries: string[] = []
+    const client = {
+      query: vi.fn(async (sql: string) => {
+        queries.push(sql)
+        return { rows: [] }
+      }),
+    }
+
+    await emptyDatabase(client as never)
+
+    expect(queries).toHaveLength(2)
+    expect(queries[1]).toContain('drop view %I.%I cascade')
+    expect(queries[1]).toContain('drop materialized view %I.%I cascade')
+    expect(queries[1]).toContain('drop table %I.%I cascade')
+    expect(queries[1]).toContain('drop foreign table %I.%I cascade')
+    expect(queries[1]).toContain('drop sequence %I.%I cascade')
   })
 })

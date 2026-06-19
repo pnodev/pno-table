@@ -16,9 +16,11 @@ export const createDatabaseSchema = z.object({
   template: z.string().min(1).optional(),
 })
 
-export const dropDatabaseSchema = z.object({
+export const databaseNameSchema = z.object({
   name: z.string().min(1),
 })
+
+export const dropDatabaseSchema = databaseNameSchema
 
 export const createRoleSchema = z.object({
   name: identifierSchema,
