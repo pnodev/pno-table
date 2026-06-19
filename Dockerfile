@@ -9,7 +9,7 @@ RUN corepack enable
 
 # Native build toolchain for better-sqlite3
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends python3 make g++ \
+  && apt-get install -y --no-install-recommends python3 make g++ postgresql-client \
   && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps
