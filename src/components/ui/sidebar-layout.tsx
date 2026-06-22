@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
-import { useDefaultLayout } from 'react-resizable-panels'
+import {
+  type LayoutStorage,
+  useDefaultLayout,
+} from 'react-resizable-panels'
 
 import {
   ResizableHandle,
@@ -16,6 +19,17 @@ const SIDEBAR_WIDTH_DEFAULT = 280
 const SIDEBAR_WIDTH_MIN = 200
 const SIDEBAR_WIDTH_MAX = 480
 
+const panelLayoutStorage: LayoutStorage = {
+  getItem(key) {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem(key)
+  },
+  setItem(key, value) {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(key, value)
+  },
+}
+
 type SidebarLayoutProps = {
   layoutId: string
   sidebar: ReactNode
@@ -31,6 +45,7 @@ export function SidebarLayout({
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
     id: layoutId,
     panelIds: [SIDEBAR_PANEL_ID, MAIN_PANEL_ID],
+    storage: panelLayoutStorage,
   })
 
   if (!isDesktop) {
