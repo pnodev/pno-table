@@ -8,7 +8,6 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
-import { CopyConnectionStringButton } from '#/components/connections/CopyConnectionStringButton'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { FormAlert } from '#/components/ui/form-layout'
@@ -147,12 +146,6 @@ export function ConnectionCard({ connection }: ConnectionCardProps) {
             Edit
           </Link>
         </Button>
-        <CopyConnectionStringButton
-          connectionId={connection.id}
-          variant="outline"
-          size="sm"
-          showLabel
-        />
         <Button
           type="button"
           variant="destructive"

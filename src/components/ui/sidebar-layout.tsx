@@ -62,7 +62,7 @@ export function SidebarLayout({
         {sidebar}
       </ResizablePanel>
 
-      <ResizableHandle withHandle />
+      <ResizableHandle title="Drag to resize. Double-click to reset." />
 
       <ResizablePanel id={MAIN_PANEL_ID} minSize={30} className="min-h-0">
         <div className="h-full min-h-0 overflow-auto bg-card">{children}</div>
