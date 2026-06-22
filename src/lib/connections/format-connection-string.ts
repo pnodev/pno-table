@@ -22,10 +22,5 @@ export function formatConnectionString(
   const host = formatHost(input.host)
   const portPart = input.port === 5432 ? '' : `:${input.port}`
   const database = encodeURIComponent(input.database)
-  const sslQuery =
-    input.sslMode === 'prefer'
-      ? ''
-      : `?sslmode=${input.sslMode === 'disable' ? 'disable' : 'require'}`
-
-  return `postgresql://${auth}@${host}${portPart}/${database}${sslQuery}`
+  return `postgresql://${auth}@${host}${portPart}/${database}?sslmode=${input.sslMode}`
 }

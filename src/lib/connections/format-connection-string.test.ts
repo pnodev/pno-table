@@ -19,7 +19,7 @@ describe('formatConnectionString', () => {
     )
   })
 
-  it('omits default port and prefer sslmode', () => {
+  it('omits default port and includes sslmode', () => {
     expect(
       formatConnectionString({
         host: 'localhost',
@@ -29,7 +29,7 @@ describe('formatConnectionString', () => {
         database: 'postgres',
         sslMode: 'prefer',
       }),
-    ).toBe('postgresql://postgres:secret@localhost/postgres')
+    ).toBe('postgresql://postgres:secret@localhost/postgres?sslmode=prefer')
   })
 
   it('URL-encodes special characters in credentials', () => {
