@@ -36,6 +36,7 @@ import {
 import type { DatabaseDetails } from '#/lib/pg/catalog-types'
 import { createDatabaseSchema } from '#/lib/pg/admin-schemas'
 import { formatAppError } from '#/lib/format-error'
+import { emitSidebarRefresh } from '#/lib/sidebar-refresh'
 import {
   createServerDatabase,
   emptyServerDatabase,
@@ -122,6 +123,7 @@ export function CreateDatabaseSheet({
       toast.success(`Database "${parsed.data.name}" created`)
       onOpenChange(false)
       await onCreated()
+      emitSidebarRefresh({ connectionId })
     } catch (submitError) {
       setError(formatAppError(submitError, 'Failed to create database'))
     } finally {
@@ -321,6 +323,7 @@ export function DatabaseManager({
 
       setPendingAction(null)
       await reload()
+      emitSidebarRefresh({ connectionId })
     } catch (actionError) {
       const fallback =
         type === 'drop'

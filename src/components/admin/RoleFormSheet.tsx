@@ -27,6 +27,7 @@ import { Switch } from '#/components/ui/switch'
 import type { RoleDatabaseAccess, RoleInfo } from '#/lib/pg/catalog-types'
 import { createRoleSchema, updateRoleSchema } from '#/lib/pg/admin-schemas'
 import { formatAppError } from '#/lib/format-error'
+import { emitSidebarRefresh } from '#/lib/sidebar-refresh'
 import {
   createServerRole,
   saveServerRoleDatabaseAccess,
@@ -243,6 +244,7 @@ export function RoleFormSheet({
             },
           },
         })
+        emitSidebarRefresh({ connectionId })
       }
 
       onOpenChange(false)

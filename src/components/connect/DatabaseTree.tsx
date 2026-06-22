@@ -1,10 +1,12 @@
-import { ChevronDown, ChevronRight, Eye, Table2 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, ChevronRight, Eye, RefreshCw, Table2 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { ScrollArea } from '#/components/ui/scroll-area'
+import { Button } from '#/components/ui/button'
 import { FormAlert } from '#/components/ui/form-layout'
 import { SidebarLink } from '#/components/ui/nav-patterns'
 import { formatAppError } from '#/lib/format-error'
+import { SIDEBAR_REFRESH_EVENT } from '#/lib/sidebar-refresh'
 import type {
   DatabaseNode,
   RelationNode,
@@ -56,43 +58,69 @@ export function DatabaseTree({
   const relationsCacheRef = useRef<RelationCache>({})
   const autoExpandedDatabaseRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
+  const loadSeqRef = useRef(0)
 
-    const load = async () => {
-      setLoadingDatabases(true)
-      setError(null)
-      setDatabaseErrors({})
-      setSchemaErrors({})
-      schemasCacheRef.current = {}
-      relationsCacheRef.current = {}
-      autoExpandedDatabaseRef.current = null
-      setSchemasByDatabase({})
-      setRelationsBySchema({})
+  const load = useCallback(async ({ resetExpansion }: { resetExpansion: boolean }) => {
+    const seq = ++loadSeqRef.current
+    setLoadingDatabases(true)
+    setError(null)
+    setDatabaseErrors({})
+    setSchemaErrors({})
+    schemasCacheRef.current = {}
+    relationsCacheRef.current = {}
+    autoExpandedDatabaseRef.current = null
+    setSchemasByDatabase({})
+    setRelationsBySchema({})
+
+    if (resetExpansion) {
       setExpandedDatabases(new Set())
       setExpandedSchemas(new Set())
-
-      try {
-        const rows = await fetchDatabases({ data: { connectionId } })
-        if (cancelled) return
-        setDatabases(rows)
-      } catch (loadError) {
-        if (!cancelled) {
-          setError(formatAppError(loadError, 'Failed to load databases'))
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingDatabases(false)
-        }
-      }
     }
 
-    void load()
-
-    return () => {
-      cancelled = true
+    try {
+      const rows = await fetchDatabases({ data: { connectionId } })
+      if (seq !== loadSeqRef.current) {
+        return
+      }
+      setDatabases(rows)
+    } catch (loadError) {
+      if (seq !== loadSeqRef.current) {
+        return
+      }
+      setError(formatAppError(loadError, 'Failed to load databases'))
+    } finally {
+      if (seq !== loadSeqRef.current) {
+        return
+      }
+      setLoadingDatabases(false)
     }
   }, [connectionId])
+
+  useEffect(() => {
+    void load({ resetExpansion: true }).catch(() => {
+      // load() already sets user-friendly error state
+    })
+  }, [load])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const handler = (event: Event) => {
+      const detail =
+        (event as CustomEvent<{ connectionId?: string }>).detail ?? {}
+
+      if (detail.connectionId && detail.connectionId !== connectionId) {
+        return
+      }
+
+      void load({ resetExpansion: false })
+    }
+
+    window.addEventListener(SIDEBAR_REFRESH_EVENT, handler)
+    return () => window.removeEventListener(SIDEBAR_REFRESH_EVENT, handler)
+  }, [connectionId, load])
 
   const ensureSchemas = async (database: string) => {
     if (schemasCacheRef.current[database]) {
@@ -247,10 +275,20 @@ export function DatabaseTree({
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col border-r border-sidebar-border bg-sidebar">
-      <div className="border-b border-sidebar-border bg-muted/50 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2 border-b border-sidebar-border bg-muted/50 px-3 py-2.5">
         <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           Navigation
         </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          onClick={() => void load({ resetExpansion: false })}
+          aria-label="Refresh sidebar"
+          title="Refresh"
+        >
+          <RefreshCw className="size-3.5" />
+        </Button>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
