@@ -19,7 +19,7 @@ export default function Header({ auth = defaultAuthStatus }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card shadow-sm">
-      <nav className="page-wrap flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
+      <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
         <h2 className="m-0 flex-shrink-0 text-base font-semibold tracking-tight">
           <Link
             to="/"

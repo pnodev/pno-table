@@ -21,7 +21,9 @@ export function ConnectionBar({ connection, database }: ConnectionBarProps) {
   const databasesActive = pathname.endsWith('/databases')
   const usersActive = pathname.endsWith('/users')
   const dumpsActive = pathname.endsWith('/dumps')
-  const browseActive = !databasesActive && !usersActive && !dumpsActive
+  const importActive = pathname.endsWith('/import')
+  const browseActive =
+    !databasesActive && !usersActive && !dumpsActive && !importActive
 
   return (
     <div className="border-b border-border bg-muted/50 px-4 py-3">
@@ -78,6 +80,13 @@ export function ConnectionBar({ connection, database }: ConnectionBarProps) {
             active={dumpsActive}
           >
             Dumps
+          </SegmentTab>
+          <SegmentTab
+            to="/connect/$connectionId/import"
+            params={{ connectionId: connection.id }}
+            active={importActive}
+          >
+            Import
           </SegmentTab>
         </SegmentTabs>
       </div>

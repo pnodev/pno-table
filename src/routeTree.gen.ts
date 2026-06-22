@@ -17,6 +17,7 @@ import { Route as AppConnectConnectionIdRouteRouteImport } from './routes/_app/c
 import { Route as AppConnectConnectionIdIndexRouteImport } from './routes/_app/connect/$connectionId/index'
 import { Route as AppConnectionsConnectionIdEditRouteImport } from './routes/_app/connections/$connectionId/edit'
 import { Route as AppConnectConnectionIdUsersRouteImport } from './routes/_app/connect/$connectionId/users'
+import { Route as AppConnectConnectionIdImportRouteImport } from './routes/_app/connect/$connectionId/import'
 import { Route as AppConnectConnectionIdDumpsRouteImport } from './routes/_app/connect/$connectionId/dumps'
 import { Route as AppConnectConnectionIdDatabasesRouteImport } from './routes/_app/connect/$connectionId/databases'
 import { Route as AppConnectConnectionIdDatabaseSchemaTableIndexRouteImport } from './routes/_app/connect/$connectionId/$database/$schema/$table/index'
@@ -65,6 +66,12 @@ const AppConnectConnectionIdUsersRoute =
     path: '/users',
     getParentRoute: () => AppConnectConnectionIdRouteRoute,
   } as any)
+const AppConnectConnectionIdImportRoute =
+  AppConnectConnectionIdImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => AppConnectConnectionIdRouteRoute,
+  } as any)
 const AppConnectConnectionIdDumpsRoute =
   AppConnectConnectionIdDumpsRouteImport.update({
     id: '/dumps',
@@ -97,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/connections/new': typeof AppConnectionsNewRoute
   '/connect/$connectionId/databases': typeof AppConnectConnectionIdDatabasesRoute
   '/connect/$connectionId/dumps': typeof AppConnectConnectionIdDumpsRoute
+  '/connect/$connectionId/import': typeof AppConnectConnectionIdImportRoute
   '/connect/$connectionId/users': typeof AppConnectConnectionIdUsersRoute
   '/connections/$connectionId/edit': typeof AppConnectionsConnectionIdEditRoute
   '/connect/$connectionId/': typeof AppConnectConnectionIdIndexRoute
@@ -109,6 +117,7 @@ export interface FileRoutesByTo {
   '/connections/new': typeof AppConnectionsNewRoute
   '/connect/$connectionId/databases': typeof AppConnectConnectionIdDatabasesRoute
   '/connect/$connectionId/dumps': typeof AppConnectConnectionIdDumpsRoute
+  '/connect/$connectionId/import': typeof AppConnectConnectionIdImportRoute
   '/connect/$connectionId/users': typeof AppConnectConnectionIdUsersRoute
   '/connections/$connectionId/edit': typeof AppConnectionsConnectionIdEditRoute
   '/connect/$connectionId': typeof AppConnectConnectionIdIndexRoute
@@ -124,6 +133,7 @@ export interface FileRoutesById {
   '/_app/connections/new': typeof AppConnectionsNewRoute
   '/_app/connect/$connectionId/databases': typeof AppConnectConnectionIdDatabasesRoute
   '/_app/connect/$connectionId/dumps': typeof AppConnectConnectionIdDumpsRoute
+  '/_app/connect/$connectionId/import': typeof AppConnectConnectionIdImportRoute
   '/_app/connect/$connectionId/users': typeof AppConnectConnectionIdUsersRoute
   '/_app/connections/$connectionId/edit': typeof AppConnectionsConnectionIdEditRoute
   '/_app/connect/$connectionId/': typeof AppConnectConnectionIdIndexRoute
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/connections/new'
     | '/connect/$connectionId/databases'
     | '/connect/$connectionId/dumps'
+    | '/connect/$connectionId/import'
     | '/connect/$connectionId/users'
     | '/connections/$connectionId/edit'
     | '/connect/$connectionId/'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/connections/new'
     | '/connect/$connectionId/databases'
     | '/connect/$connectionId/dumps'
+    | '/connect/$connectionId/import'
     | '/connect/$connectionId/users'
     | '/connections/$connectionId/edit'
     | '/connect/$connectionId'
@@ -165,6 +177,7 @@ export interface FileRouteTypes {
     | '/_app/connections/new'
     | '/_app/connect/$connectionId/databases'
     | '/_app/connect/$connectionId/dumps'
+    | '/_app/connect/$connectionId/import'
     | '/_app/connect/$connectionId/users'
     | '/_app/connections/$connectionId/edit'
     | '/_app/connect/$connectionId/'
@@ -235,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConnectConnectionIdUsersRouteImport
       parentRoute: typeof AppConnectConnectionIdRouteRoute
     }
+    '/_app/connect/$connectionId/import': {
+      id: '/_app/connect/$connectionId/import'
+      path: '/import'
+      fullPath: '/connect/$connectionId/import'
+      preLoaderRoute: typeof AppConnectConnectionIdImportRouteImport
+      parentRoute: typeof AppConnectConnectionIdRouteRoute
+    }
     '/_app/connect/$connectionId/dumps': {
       id: '/_app/connect/$connectionId/dumps'
       path: '/dumps'
@@ -269,6 +289,7 @@ declare module '@tanstack/react-router' {
 interface AppConnectConnectionIdRouteRouteChildren {
   AppConnectConnectionIdDatabasesRoute: typeof AppConnectConnectionIdDatabasesRoute
   AppConnectConnectionIdDumpsRoute: typeof AppConnectConnectionIdDumpsRoute
+  AppConnectConnectionIdImportRoute: typeof AppConnectConnectionIdImportRoute
   AppConnectConnectionIdUsersRoute: typeof AppConnectConnectionIdUsersRoute
   AppConnectConnectionIdIndexRoute: typeof AppConnectConnectionIdIndexRoute
   AppConnectConnectionIdDatabaseSchemaTableStructureRoute: typeof AppConnectConnectionIdDatabaseSchemaTableStructureRoute
@@ -279,6 +300,7 @@ const AppConnectConnectionIdRouteRouteChildren: AppConnectConnectionIdRouteRoute
   {
     AppConnectConnectionIdDatabasesRoute: AppConnectConnectionIdDatabasesRoute,
     AppConnectConnectionIdDumpsRoute: AppConnectConnectionIdDumpsRoute,
+    AppConnectConnectionIdImportRoute: AppConnectConnectionIdImportRoute,
     AppConnectConnectionIdUsersRoute: AppConnectConnectionIdUsersRoute,
     AppConnectConnectionIdIndexRoute: AppConnectConnectionIdIndexRoute,
     AppConnectConnectionIdDatabaseSchemaTableStructureRoute:

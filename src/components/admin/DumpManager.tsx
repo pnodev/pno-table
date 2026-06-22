@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { LoaderCircle } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -138,7 +139,15 @@ export function DumpManager({
         <h1 className="text-2xl font-semibold text-foreground">Dumps</h1>
         <p className="text-sm text-muted-foreground">
           Export a database to a plain SQL file or import an existing dump with
-          pg_dump and psql.
+          pg_dump and psql. To copy directly from another database, use{' '}
+          <Link
+            to="/connect/$connectionId/import"
+            params={{ connectionId }}
+            className="text-brand hover:underline"
+          >
+            Import
+          </Link>
+          .
         </p>
       </div>
 
