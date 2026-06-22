@@ -34,7 +34,10 @@ import {
   SheetTitle,
 } from '#/components/ui/sheet'
 import type { DatabaseDetails } from '#/lib/pg/catalog-types'
-import { createDatabaseSchema } from '#/lib/pg/admin-schemas'
+import {
+  createDatabaseSchema,
+  identifierHint,
+} from '#/lib/pg/admin-schemas'
 import { formatAppError } from '#/lib/format-error'
 import { emitSidebarRefresh } from '#/lib/sidebar-refresh'
 import {
@@ -160,9 +163,7 @@ export function CreateDatabaseSheet({
                     required
                     autoFocus
                   />
-                  <FieldHint>
-                    Letters, numbers, and underscores. No spaces.
-                  </FieldHint>
+                  <FieldHint>{identifierHint}</FieldHint>
                 </Field>
               </FormGridItem>
 
@@ -235,7 +236,7 @@ export function CreateDatabaseSheet({
               </FormGridItem>
             </FormGrid>
 
-            {error ? <FormAlert>{error}</FormAlert> : null}
+            {error ? <FormAlert className="mt-4">{error}</FormAlert> : null}
           </SheetFormBody>
 
           <SheetFormFooter>

@@ -1,13 +1,15 @@
 import { z } from 'zod'
 
-const identifierMessage =
-  'Use letters, numbers, and underscores only. No spaces.'
+export const identifierHint =
+  'Use letters, numbers, underscores, or hyphens. No spaces.'
+
+const identifierMessage = identifierHint
 
 export const identifierSchema = z
   .string()
   .min(1, 'Name is required')
   .max(63, 'Name must be 63 characters or fewer')
-  .regex(/^[a-zA-Z_][a-zA-Z0-9_$]*$/, identifierMessage)
+  .regex(/^[a-zA-Z_][a-zA-Z0-9_$-]*$/, identifierMessage)
 
 export const createDatabaseSchema = z.object({
   name: identifierSchema,
