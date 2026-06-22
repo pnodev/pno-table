@@ -214,6 +214,17 @@ export async function emptyDatabase(client: pg.Client): Promise<void> {
         join pg_catalog.pg_namespace n on n.oid = c.relnamespace
         where ${USER_SCHEMA_SQL}
           and c.relkind in ('v', 'm', 'r', 'p', 'f', 'S')
+          and not (
+            c.relkind = 'S'
+            and exists (
+              select 1
+              from pg_catalog.pg_depend d
+              where d.classid = 'pg_class'::regclass
+                and d.objid = c.oid
+                and d.deptype = 'a'
+                and d.refclassid = 'pg_class'::regclass
+            )
+          )
         order by
           case c.relkind
             when 'v' then 1
@@ -228,23 +239,35 @@ export async function emptyDatabase(client: pg.Client): Promise<void> {
       loop
         case obj.kind
           when 'v' then
-            execute format('drop view %I.%I cascade', obj.schema_name, obj.object_name);
+            execute format(
+              'drop view if exists %I.%I cascade',
+              obj.schema_name,
+              obj.object_name
+            );
           when 'm' then
             execute format(
-              'drop materialized view %I.%I cascade',
+              'drop materialized view if exists %I.%I cascade',
               obj.schema_name,
               obj.object_name
             );
           when 'r', 'p' then
-            execute format('drop table %I.%I cascade', obj.schema_name, obj.object_name);
+            execute format(
+              'drop table if exists %I.%I cascade',
+              obj.schema_name,
+              obj.object_name
+            );
           when 'f' then
             execute format(
-              'drop foreign table %I.%I cascade',
+              'drop foreign table if exists %I.%I cascade',
               obj.schema_name,
               obj.object_name
             );
           when 'S' then
-            execute format('drop sequence %I.%I cascade', obj.schema_name, obj.object_name);
+            execute format(
+              'drop sequence if exists %I.%I cascade',
+              obj.schema_name,
+              obj.object_name
+            );
         end case;
       end loop;
     end
