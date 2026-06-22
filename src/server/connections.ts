@@ -15,6 +15,8 @@ import type {
   ConnectionTestResult,
   PostgresConnectionConfig,
 } from '#/lib/connections/types'
+import { formatConnectionString } from '#/lib/connections/format-connection-string'
+import { resolveConnection } from '#/lib/pg/resolve-connection'
 import { testPostgresConnection } from '#/lib/pg/test-connection'
 
 function toPostgresConfig(
@@ -147,4 +149,20 @@ export const testSavedConnection = createServerFn({ method: 'POST' })
     const password = decryptSecret(row.passwordEncrypted)
 
     return testPostgresConnection(toPostgresConfig(profile, password))
+  })
+
+export const getConnectionString = createServerFn({ method: 'POST' })
+  .validator((data: { connectionId: string; database?: string }) => data)
+  .handler(async ({ data }): Promise<string> => {
+    const resolved = await resolveConnection(data.connectionId)
+    const database = data.database ?? resolved.config.defaultDatabase
+
+    return formatConnectionString({
+      host: resolved.config.host,
+      port: resolved.config.port,
+      username: resolved.config.username,
+      password: resolved.config.password,
+      database,
+      sslMode: resolved.config.sslMode,
+    })
   })

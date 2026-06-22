@@ -1,6 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { ArrowLeft, Database } from 'lucide-react'
 
+import { CopyConnectionStringButton } from '#/components/connections/CopyConnectionStringButton'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import {
@@ -46,6 +47,10 @@ export function ConnectionBar({ connection, database }: ConnectionBarProps) {
               {activeDatabase}
             </p>
           </div>
+          <CopyConnectionStringButton
+            connectionId={connection.id}
+            database={activeDatabase}
+          />
         </div>
 
         {connection.readOnly ? (

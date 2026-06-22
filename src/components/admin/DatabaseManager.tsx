@@ -1,3 +1,4 @@
+import { CopyConnectionStringButton } from '#/components/connections/CopyConnectionStringButton'
 import { LoaderCircle, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -367,9 +368,7 @@ export function DatabaseManager({
               <th className="px-3 py-2 text-left font-medium">Encoding</th>
               <th className="px-3 py-2 text-left font-medium">Collation</th>
               <th className="px-3 py-2 text-right font-medium">Size</th>
-              {!readOnly ? (
-                <th className="px-3 py-2 text-right font-medium">Actions</th>
-              ) : null}
+              <th className="px-3 py-2 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -389,43 +388,52 @@ export function DatabaseManager({
                 <td className="px-3 py-2 text-right tabular-nums">
                   {formatSize(database.sizeBytes)}
                 </td>
-                {!readOnly ? (
-                  <td className="px-3 py-2 text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setPendingAction({
-                            type: 'truncate',
-                            database,
-                          })
-                        }
-                      >
-                        Truncate
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setPendingAction({ type: 'empty', database })
-                        }
-                      >
-                        Empty
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() =>
-                          setPendingAction({ type: 'drop', database })
-                        }
-                      >
-                        Drop
-                      </Button>
-                    </div>
-                  </td>
-                ) : null}
+                <td className="px-3 py-2 text-right">
+                  <div className="flex justify-end gap-1">
+                    <CopyConnectionStringButton
+                      connectionId={connectionId}
+                      database={database.name}
+                      variant="ghost"
+                      size="sm"
+                      showLabel
+                    />
+                    {!readOnly ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setPendingAction({
+                              type: 'truncate',
+                              database,
+                            })
+                          }
+                        >
+                          Truncate
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setPendingAction({ type: 'empty', database })
+                          }
+                        >
+                          Empty
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() =>
+                            setPendingAction({ type: 'drop', database })
+                          }
+                        >
+                          Drop
+                        </Button>
+                      </>
+                    ) : null}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
