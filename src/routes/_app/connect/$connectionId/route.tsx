@@ -7,6 +7,7 @@ import {
 
 import { ConnectionBar } from '#/components/connect/ConnectionBar'
 import { DatabaseTree } from '#/components/connect/DatabaseTree'
+import { SidebarLayout } from '#/components/ui/sidebar-layout'
 import { connectRouteApi } from '#/lib/connect/route-api'
 import { getConnection } from '#/server/connections'
 
@@ -49,18 +50,19 @@ function ConnectLayout() {
         database={tableParams?.database}
       />
 
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <DatabaseTree
-          connectionId={params.connectionId}
-          activeDatabase={tableParams?.database}
-          activeSchema={tableParams?.schema}
-          activeTable={tableParams?.table}
-        />
-
-        <div className="min-h-0 overflow-auto border-l border-border bg-card">
-          <Outlet />
-        </div>
-      </div>
+      <SidebarLayout
+        layoutId="connect-database-sidebar"
+        sidebar={
+          <DatabaseTree
+            connectionId={params.connectionId}
+            activeDatabase={tableParams?.database}
+            activeSchema={tableParams?.schema}
+            activeTable={tableParams?.table}
+          />
+        }
+      >
+        <Outlet />
+      </SidebarLayout>
     </div>
   )
 }

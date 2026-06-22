@@ -67,6 +67,9 @@
   --dialog-width-lightbox: 96vw;
   --dialog-height-lightbox: 92vh;
   --content-width-form: 48rem;
+  --sidebar-width-default: 280px;
+  --sidebar-width-min: 200px;
+  --sidebar-width-max: 480px;
 }
 
 @theme inline {

@@ -274,7 +274,7 @@ export function DatabaseTree({
   }
 
   return (
-    <aside className="flex h-full min-h-0 w-full flex-col border-r border-sidebar-border bg-sidebar">
+    <aside className="flex h-full min-h-0 w-full flex-col bg-sidebar">
       <div className="flex items-center justify-between gap-2 border-b border-sidebar-border bg-muted/50 px-3 py-2.5">
         <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           Navigation
