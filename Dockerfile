@@ -7,9 +7,15 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
 
-# Native build toolchain for better-sqlite3
+# Native build toolchain for better-sqlite3; PGDG client for pg_dump/psql (must be >= server version)
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends python3 make g++ postgresql-client \
+  && apt-get install -y --no-install-recommends curl ca-certificates gnupg \
+  && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+    | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg \
+  && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+    > /etc/apt/sources.list.d/pgdg.list \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ postgresql-client-17 \
   && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps
